@@ -41,11 +41,11 @@ graph TB
     F --> G
     G --> H[Response Generator]
     H --> A
-
+    
     I[Vector Database] --> E
     J[Document Storage] --> C
     J --> D
-
+    
     K[Monitoring] --> L[Prometheus]
     K --> M[Grafana]
     K --> N[MLflow]
