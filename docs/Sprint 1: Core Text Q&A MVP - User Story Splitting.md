@@ -77,11 +77,11 @@
 **Branch Name**: `feature/rag-pipeline`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement semantic search retriever`
+1. **Commit Message**: `feat: implement semantic search retriever` ✅
    - Implemented vector similarity-based retriever
    - Configured top-k results return
 
-2. **Commit Message**: `feat: design RAG prompt template`
+2. **Commit Message**: `feat: design RAG prompt template` ✅
    - Created context+question prompt template
    - Added system role definition
 
