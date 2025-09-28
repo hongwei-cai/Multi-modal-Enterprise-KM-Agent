@@ -43,7 +43,7 @@ Build a locally runnable, intelligent text Q&A system based on private documents
     - Create a Python virtual environment and standardize dependency management (`requirements.txt`or `poetry`).
     - Design the project directory structure (modular organization: `data/`, `src/rag/`, `src/models/`, `tests/`).
 2. **Document Processing and Vectorization Pipeline**
-    - Implement a PDF document parser (using `PyPDF2`or `pdfplumber`).
+    - Implement a PDF document parser (using `pypdf`or `pdfplumber`).
     - Design a text chunking strategy (overlapping chunks, considering semantic boundaries).
     - Integrate Hugging Face Embedding models (e.g., `BGE`series).
     - Build a vector database (Chroma) for persistent storage.
