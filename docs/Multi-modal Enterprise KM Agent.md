@@ -43,7 +43,7 @@ Build a locally runnable, intelligent text Q&A system based on private documents
     - Create a Python virtual environment and standardize dependency management (`requirements.txt`or `poetry`).
     - Design the project directory structure (modular organization: `data/`, `src/rag/`, `src/models/`, `tests/`).
 2. **Document Processing and Vectorization Pipeline**
-    - Implement a PDF document parser (using `pypdf`or `pdfplumber`).
+    - Implement a PDF document parser (using `pypdf`).
     - Design a text chunking strategy (overlapping chunks, considering semantic boundaries).
     - Integrate Hugging Face Embedding models (e.g., `BGE`series).
     - Build a vector database (Chroma) for persistent storage.
@@ -156,5 +156,3 @@ This three-stage roadmap ensures the systematic practice of all required technic
 
 - **Sprint 4+**: Consider adding advanced features such as audio processing, multi-agent collaboration, or real-time collaborative editing.
 - **Technical Deepening**: Explore more complex RAG patterns (e.g., HyDE, sub-question decomposition) or model fine-tuning techniques (e.g., DPO).
-
-Through this project, you will build a complete, production-grade multi-modal knowledge management system while comprehensively mastering the core skills of modern AI full-stack development. Start with Sprint 1, and remember that the core of agile is **continuous delivery and iterative improvement**!

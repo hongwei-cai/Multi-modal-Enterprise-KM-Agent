@@ -1,0 +1,123 @@
+import logging
+import os
+import sys
+from typing import Any, Dict, List, Optional
+
+import chromadb
+from chromadb.config import Settings
+
+from configs.vector_db_config import persist_directory
+
+# Add project root to sys.path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+logger = logging.getLogger(__name__)
+
+
+class VectorDatabase:
+    """
+    ChromaDB client wrapper for vector storage and retrieval.
+    """
+
+    def __init__(self, persist_directory: str = persist_directory):
+        """
+        Initialize ChromaDB client.
+
+        Args:
+            persist_directory: Directory to persist the database.
+        """
+        self.client = chromadb.PersistentClient(
+            path=persist_directory,
+            settings=Settings(allow_reset=True, anonymized_telemetry=False),
+        )
+
+        self.collection = None
+        logger.info("ChromaDB client initialized.")
+
+    def create_collection(
+        self, name: str = "documents", metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """
+        Create or get a collection for storing document vectors.
+
+        Args:
+            name: Name of the collection.
+            metadata: Optional metadata for the collection.
+        """
+        if metadata is None:
+            metadata = {
+                "description": "Collection for storing document \
+                        chunks and embeddings"
+            }
+
+        self.collection = self.client.get_or_create_collection(
+            name=name, metadata=metadata
+        )
+        logger.info(f"Collection '{name}' created or retrieved.")
+
+    def add_documents(
+        self,
+        ids: List[str],
+        embeddings: List[List[float]],
+        metadatas: List[Dict[str, Any]],
+        documents: List[str],
+    ) -> None:
+        """
+        Add documents with embeddings to the collection.
+
+        Args:
+            ids: List of unique IDs for each document chunk.
+            embeddings: List of embedding vectors.
+            metadatas: List of metadata dictionaries (e.g., source file, chunk index).
+            documents: List of text documents/chunks.
+        """
+        if self.collection is None:
+            raise ValueError("Collection not created. Call create_collection() first.")
+
+        self.collection.add(
+            ids=ids, embeddings=embeddings, metadatas=metadatas, documents=documents
+        )
+        logger.info(f"Added {len(ids)} documents to collection.")
+
+    def query(self, query_embedding: List[float], n_results: int = 5) -> Dict[str, Any]:
+        """
+        Query the collection for similar documents.
+
+        Args:
+            query_embedding: Embedding vector for the query.
+            n_results: Number of results to return.
+
+        Returns:
+            Query results including IDs, distances, metadatas, and documents.
+        """
+        if self.collection is None:
+            raise ValueError("Collection not created. Call create_collection() first.")
+
+        results = self.collection.query(
+            query_embeddings=[query_embedding], n_results=n_results
+        )
+        return results
+
+    def delete_collection(self, name: str) -> None:
+        """
+        Delete a collection.
+
+        Args:
+            name: Name of the collection to delete.
+        """
+        self.client.delete_collection(name=name)
+        logger.info(f"Collection '{name}' deleted.")
+
+
+# Convenience function
+def get_vector_db(persist_directory: str = persist_directory) -> VectorDatabase:
+    """
+    Get a VectorDatabase instance.
+
+    Args:
+        persist_directory: Directory for persistence.
+
+    Returns:
+        VectorDatabase instance.
+    """
+    return VectorDatabase(persist_directory=persist_directory)
