@@ -85,7 +85,7 @@
    - Created context+question prompt template
    - Added system role definition
 
-3. **Commit Message**: `feat: build end-to-end RAG pipeline`
+3. **Commit Message**: `feat: build end-to-end RAG pipeline` ✅
    - Integrated retriever+LLM generation workflow
    - Implemented context truncation and stitching
 
