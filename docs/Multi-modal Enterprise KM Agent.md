@@ -1,5 +1,5 @@
 # Multi-modal Enterprise KM Agent: Incremental Agile Development Roadmap
-
+[中文](./多模态企业知识管理智能体.md)
 ## Project Overview
 
 This project aims to build an intelligent enterprise knowledge management agent capable of processing and understanding various forms of enterprise knowledge assets (documents, images, etc.). The project adopts an **agile development approach**, iterating through three key sprints to ensure each phase delivers usable product increments.
@@ -30,7 +30,7 @@ flowchart TD
     end
 ```
 
-## Sprint 1: Core Text Q&A MVP - "Laying the Foundation"
+## Sprint 1: [Core Text Q&A MVP - "Laying the Foundation"](./Sprint%201:%20Core%20Text%20Q&A%20MVP%20-%20User%20Story%20Splitting.md)
 
 ### Objectives
 
@@ -72,7 +72,7 @@ Build a locally runnable, intelligent text Q&A system based on private documents
 3. vLLM-deployed Llama 3 8B model response latency below 500ms (average).
 4. Docker container enables one-click startup of the complete service with a clear Git commit history.
 
-## Sprint 2: Model Customization and Performance Optimization - "Striving for Excellence"
+## Sprint 2: [Model Customization and Performance Optimization - "Striving for Excellence"](./Sprint%202:%20Model%20Customization%20and%20Performance%20Optimization%20-%20User%20Stories%20Breakdown.md)
 
 ### Objectives
 
@@ -109,7 +109,7 @@ Enhance Q&A quality and system efficiency by fine-tuning the model for the domai
 3. A/B testing shows the fine-tuned model wins in human evaluation with over a 70% success rate.
 4. MLflow comprehensively records all experiments, enabling reproducibility of the best model.
 
-## Sprint 3: Productionization and Multi-modal Expansion - "Comprehensive Delivery"
+## Sprint 3: [Productionization and Multi-modal Expansion - "Comprehensive Delivery"](./Sprint%203:%20Productionization%20and%20Multimodal%20Expansion%20-%20User%20Stories%20Breakdown.md)
 
 ### Objectives
 

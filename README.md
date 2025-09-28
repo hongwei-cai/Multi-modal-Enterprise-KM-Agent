@@ -99,7 +99,7 @@ Multi-modal-Enterprise-KM-Agent/
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - Docker & Docker Compose
 - NVIDIA GPU with CUDA 11.8+ (for local development)
 - 16GB+ RAM recommended
@@ -197,7 +197,7 @@ curl -X POST "http://localhost:8000/v1/query" \
 
 ## 🔧 Development Guide
 
-### Sprint-Based Development
+### [Sprint-Based Development](./docs/Multi-modal%20Enterprise%20KM%20Agent.md)
 
 This project follows a 3-sprint agile development approach:
 
@@ -329,7 +329,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: [docs/](docs/)
 - **Issues**: [GitHub Issues](https://github.com/hongwei-cai/Multi-modal-Enterprise-KM-Agent/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/hongwei-cai/Multi-modal-Enterprise-KM-Agent/discussions)
-- **Email**: vincentcai@duck.com
 
 ---
 
