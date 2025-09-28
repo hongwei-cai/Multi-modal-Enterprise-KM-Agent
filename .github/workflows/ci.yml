@@ -29,6 +29,13 @@ jobs:
         pip install -r requirements.txt
         pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0.tar.gz
 
+    - name: Cache Hugging Face models
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/huggingface
+        key: hf-models-${{ hashFiles('requirements.txt') }}
+        run: python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+
     - name: Run unit tests
       env:
         CHROMA_PERSIST_DIR: ./test_chroma_db

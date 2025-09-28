@@ -40,12 +40,13 @@
 **Branch Name**: `feature/vector-database`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: integrate ChromaDB for vector storage`
+1. **Commit Message**: `feat: integrate ChromaDB for vector storage` ✅
    - Implemented ChromaDB client connection
    - Designed document collection schema
 
-2. **Commit Message**: `feat: add BGE embedding model integration`
-   - Integrated Hugging Face BGE model
+2. **Commit Message**: `feat: add BGE embedding model integration` ✅
+   - Integrated Hugging Face BGE model (later switch to BAAI/bge-m3)
+   - sentence-transformers/all-MiniLM-L6-v2 for local development
    - Implemented batch text embedding generation
 
 3. **Commit Message**: `feat: implement document indexing pipeline`
