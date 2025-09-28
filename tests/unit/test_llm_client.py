@@ -91,3 +91,48 @@ def test_parameter_validation():
         client.generate("Test", temperature=3.0)
     with pytest.raises(ValueError, match="Top-p must be between 0 and 1"):
         client.generate("Test", top_p=1.5)
+
+
+def test_response_format():
+    """Test that responses are valid strings."""
+    with patch("src.rag.llm_client.AutoTokenizer") as mock_tokenizer_class, patch(
+        "src.rag.llm_client.AutoModelForCausalLM"
+    ) as mock_model_class:
+        mock_tokenizer = MagicMock()
+        mock_tokenizer.pad_token = None
+        mock_tokenizer.eos_token = "<eos>"
+        mock_tokenizer.decode = MagicMock(return_value="This is a test response.")
+        mock_tokenizer_class.from_pretrained.return_value = mock_tokenizer
+
+        mock_model = MagicMock()
+        mock_model.generate.return_value = [1, 2, 3]
+        mock_model_class.from_pretrained.return_value = mock_model
+
+        client = LLMClient()
+        response = client.generate("Hello")
+        assert isinstance(response, str)
+        assert len(response) > 0
+        assert "test" in response.lower()  # Basic content check
+
+
+def test_response_quality_basic():
+    """Test basic response quality (length, no errors)."""
+    with patch("src.rag.llm_client.AutoTokenizer") as mock_tokenizer_class, patch(
+        "src.rag.llm_client.AutoModelForCausalLM"
+    ) as mock_model_class:
+        mock_tokenizer = MagicMock()
+        mock_tokenizer.pad_token = None
+        mock_tokenizer.eos_token = "<eos>"
+        mock_tokenizer.decode = MagicMock(
+            return_value="Hello! How can I help you today?"
+        )
+        mock_tokenizer_class.from_pretrained.return_value = mock_tokenizer
+
+        mock_model = MagicMock()
+        mock_model.generate.return_value = [1, 2, 3]
+        mock_model_class.from_pretrained.return_value = mock_model
+
+        client = LLMClient()
+        response = client.generate("Hi", max_length=50)
+        assert len(response.split()) > 3  # At least a few words
+        assert not response.startswith("Error")  # No error messages
