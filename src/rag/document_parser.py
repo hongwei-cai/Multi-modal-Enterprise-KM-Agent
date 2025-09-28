@@ -92,7 +92,7 @@ class PDFParser:
                         self.logger.debug(
                             "Extracted text from page %d/%d", page_num + 1, num_pages
                         )
-                    except Exception as e:
+                    except ValueError as e:
                         self.logger.warning(
                             "Failed to extract text from page %d: %s",
                             page_num + 1,

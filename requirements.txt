@@ -2,7 +2,7 @@ fastapi==0.104.1
 uvicorn==0.24.0
 pypdf==5.9.0
 langchain==0.0.346
-chromadb==0.4.15
+chromadb==1.1.0
 sentence-transformers==2.2.2
 torch==2.8.0
 torchvision==0.23.0
