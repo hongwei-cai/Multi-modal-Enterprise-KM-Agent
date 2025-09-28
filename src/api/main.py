@@ -2,11 +2,13 @@
 FastAPI application for the Multi-modal Enterprise KM Agent.
 """
 import logging
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, validator
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.rag.indexing_pipeline import get_indexing_pipeline
 from src.rag.rag_pipeline import get_rag_pipeline
@@ -29,22 +31,52 @@ app.add_middleware(
 logger = logging.getLogger(__name__)
 
 
+class ErrorHandlingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        try:
+            response = await call_next(request)
+            return response
+        except HTTPException as e:  # noqa: F841
+            # Re-raise HTTPExceptions as-is
+            raise
+        except Exception as e:
+            logger.error(f"Unhandled error: {e}", exc_info=True)
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Internal server error", "error": str(e)},
+            )
+
+
 # Pydantic models for request/response validation
 class UploadResponse(BaseModel):
-    message: str
-    document_id: Optional[str] = None
+    message: str = Field(..., description="Response message")
+    document_id: Optional[str] = Field(None, description="Optional document ID")
 
 
 class QuestionRequest(BaseModel):
-    question: str
-    top_k: Optional[int] = 5
-    temperature: Optional[float] = 0.7
+    question: str = Field(
+        ..., min_length=1, max_length=500, description="User question"
+    )
+    top_k: Optional[int] = Field(
+        5, ge=1, le=20, description="Number of docs to retrieve"
+    )
+    temperature: Optional[float] = Field(
+        0.7, ge=0.0, le=2.0, description="Generation temperature"
+    )
+
+    @validator("question")
+    def question_not_empty(cls, v):
+        if not v.strip():
+            raise ValueError("Question cannot be empty or whitespace")
+        return v
 
 
 class AnswerResponse(BaseModel):
-    question: str
-    answer: str
-    context_docs: Optional[list] = None
+    question: str = Field(..., description="Original question")
+    answer: str = Field(..., description="Generated answer")
+    context_docs: Optional[List[str]] = Field(
+        None, description="Retrieved context docs"
+    )
 
 
 # Dependency to get pipelines (can be configured via env)
@@ -107,6 +139,10 @@ async def ask_question(request: QuestionRequest, rag=Depends(get_rag)):
     except Exception as e:
         logger.error(f"QA failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate answer")
+
+
+# Add middleware
+app.add_middleware(ErrorHandlingMiddleware)
 
 
 # Optional: Root endpoint
