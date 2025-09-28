@@ -1,6 +1,6 @@
 fastapi==0.104.1
 uvicorn==0.24.0
-pypdf2==3.0.1
+pypdf==6.1.0
 langchain==0.0.346
 chromadb==0.4.15
 sentence-transformers==2.2.2
@@ -17,3 +17,4 @@ pre-commit==3.5.0
 pytest==8.3.5
 jieba==0.42.1
 spacy==3.7.4
+en-core-web-sm
