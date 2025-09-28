@@ -34,9 +34,9 @@ class EmbeddingModel:
             )
 
         self.device = "mps" if torch.backends.mps.is_available() else "cpu"
-        logger.info(f"Using device: {self.device}")
+        logger.info("Using device: %s", self.device)
         self.model = SentenceTransformer(model_name, device=self.device)
-        logger.info(f"Loaded embedding model: {model_name}")
+        logger.info("Loaded embedding model: %s", model_name)
 
     def encode(self, text: str) -> List[float]:
         """

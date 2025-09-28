@@ -49,7 +49,7 @@
    - sentence-transformers/all-MiniLM-L6-v2 for local development
    - Implemented batch text embedding generation
 
-3. **Commit Message**: `feat: implement document indexing pipeline`
+3. **Commit Message**: `feat: implement document indexing pipeline` ✅
    - Built end-to-end document→chunk→embedding→storage workflow
    - Added progress tracking and error recovery
 

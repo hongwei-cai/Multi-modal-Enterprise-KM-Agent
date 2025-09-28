@@ -1,17 +1,11 @@
 import logging
-import os
-import sys
 from typing import Any, Dict, List, Optional
 
 import chromadb
 from chromadb.config import Settings
-
 from configs.vector_db_config import persist_directory
+from src.rag.embedding import EmbeddingModel, get_embedding_model
 
-from .embedding import EmbeddingModel, get_embedding_model
-
-# Add project root to sys.path for imports
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +49,7 @@ class VectorDatabase:
         self.collection = self.client.get_or_create_collection(
             name=name, metadata=metadata
         )
-        logger.info(f"Collection '{name}' created or retrieved.")
+        logger.info("Collection '%s' created or retrieved.", name)
 
     def add_documents(
         self,
@@ -79,7 +73,28 @@ class VectorDatabase:
         self.collection.add(
             ids=ids, embeddings=embeddings, metadatas=metadatas, documents=documents
         )
-        logger.info(f"Added {len(ids)} documents to collection.")
+        logger.info("Added %d documents to collection.", len(ids))
+
+    def add_documents_with_embeddings(
+        self,
+        ids: List[str],
+        documents: List[str],
+        metadatas: List[Dict[str, Any]],
+        embedding_model: Optional[EmbeddingModel] = None,
+    ) -> None:
+        """
+        Add documents with auto-generated embeddings.
+
+        Args:
+            ids: Unique IDs.
+            documents: Text documents.
+            metadatas: Metadata.
+            embedding_model: EmbeddingModel instance (defaults to all-MiniLM-L6-v2).
+        """
+        if embedding_model is None:
+            embedding_model = get_embedding_model()
+        embeddings = embedding_model.encode_batch(documents)
+        self.add_documents(ids, embeddings, metadatas, documents)
 
     def add_documents_with_embeddings(
         self,
@@ -129,18 +144,20 @@ class VectorDatabase:
             name: Name of the collection to delete.
         """
         self.client.delete_collection(name=name)
-        logger.info(f"Collection '{name}' deleted.")
+        logger.info("Collection '%s' deleted.", name)
 
 
 # Convenience function
-def get_vector_db(persist_directory: str = persist_directory) -> VectorDatabase:
+def get_vector_db(db_path: Optional[str] = None) -> VectorDatabase:
     """
     Get a VectorDatabase instance.
 
     Args:
-        persist_directory: Directory for persistence.
+        db_path: Path to vector DB. If None, uses config default.
 
     Returns:
         VectorDatabase instance.
     """
-    return VectorDatabase(persist_directory=persist_directory)
+    if db_path is None:
+        db_path = persist_directory  # Fallback to config
+    return VectorDatabase(persist_directory=db_path)
