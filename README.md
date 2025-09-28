@@ -80,7 +80,7 @@ graph TB
 ## 📁 Project Structure
 
 ```
-multimodal-knowledge-agent/
+Multi-modal-Enterprise-KM-Agent/
 ├── src/
 │   ├── api/                 # FastAPI application
 │   ├── rag/                 # Retrieval-Augmented Generation
