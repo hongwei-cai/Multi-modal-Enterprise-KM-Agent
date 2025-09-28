@@ -3,9 +3,9 @@ from typing import Any, Dict, List, Optional
 
 import chromadb
 from chromadb.config import Settings
+
 from configs.vector_db_config import persist_directory
 from src.rag.embedding import EmbeddingModel, get_embedding_model
-
 
 logger = logging.getLogger(__name__)
 
@@ -96,45 +96,23 @@ class VectorDatabase:
         embeddings = embedding_model.encode_batch(documents)
         self.add_documents(ids, embeddings, metadatas, documents)
 
-    def add_documents_with_embeddings(
-        self,
-        ids: List[str],
-        documents: List[str],
-        metadatas: List[Dict[str, Any]],
-        embedding_model: Optional[EmbeddingModel] = None,
-    ) -> None:
-        """
-        Add documents with auto-generated embeddings.
-
-        Args:
-            ids: Unique IDs.
-            documents: Text documents.
-            metadatas: Metadata.
-            embedding_model: EmbeddingModel instance (defaults to all-MiniLM-L6-v2).
-        """
-        if embedding_model is None:
-            embedding_model = get_embedding_model()
-        embeddings = embedding_model.encode_batch(documents)
-        self.add_documents(ids, embeddings, metadatas, documents)
-
     def query(self, query_embedding: List[float], n_results: int = 5) -> Dict[str, Any]:
         """
-        Query the collection for similar documents.
+        Query the collection for similar vectors.
 
         Args:
-            query_embedding: Embedding vector for the query.
-            n_results: Number of results to return.
+            query_embedding: Query embedding vector.
+            n_results: Number of results.
 
         Returns:
-            Query results including IDs, distances, metadatas, and documents.
+            Query results dict.
         """
         if self.collection is None:
             raise ValueError("Collection not created. Call create_collection() first.")
 
-        results = self.collection.query(
+        return self.collection.query(
             query_embeddings=[query_embedding], n_results=n_results
         )
-        return results
 
     def delete_collection(self, name: str) -> None:
         """
