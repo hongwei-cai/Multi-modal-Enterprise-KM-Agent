@@ -17,3 +17,4 @@ pre-commit==3.5.0
 pytest==8.3.5
 jieba==0.42.1
 spacy==3.7.4
+mypy==1.18.2

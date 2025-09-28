@@ -59,8 +59,8 @@
 **Branch Name**: `feature/llm-deployment`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: setup vLLM with Llama 3 8B model`
-   - Downloaded and configured Llama 3 8B model
+1. **Commit Message**: `feat: setup vLLM with DialoGPT-medium model` ✅
+   - Downloaded and configured DialoGPT-medium model
    - Implemented vLLM startup script
 
 2. **Commit Message**: `feat: implement model inference client`
