@@ -4,9 +4,9 @@ pypdf==5.9.0
 langchain==0.0.346
 chromadb==0.4.15
 sentence-transformers==2.2.2
-torch
-torchvision
-torchaudio
+torch==2.8.0
+torchvision==0.23.0
+torchaudio==2.8.0
 transformers==4.35.0
 python-multipart==0.0.6
 pydantic==2.4.2
