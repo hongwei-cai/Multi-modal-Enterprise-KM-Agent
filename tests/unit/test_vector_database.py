@@ -1,3 +1,5 @@
+""" Unit tests for the VectorDatabase class in src.rag.vector_database."""
+
 import tempfile
 
 import pytest

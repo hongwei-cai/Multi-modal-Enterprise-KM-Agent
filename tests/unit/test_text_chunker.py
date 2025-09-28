@@ -1,3 +1,5 @@
+""" Unit tests for text chunking functions in src.rag.text_chunker."""
+
 import pytest
 
 from src.rag.text_chunker import (

@@ -1,3 +1,5 @@
+""" Text chunking utilities for various languages and strategies. """
+
 import logging
 import re
 import unicodedata
