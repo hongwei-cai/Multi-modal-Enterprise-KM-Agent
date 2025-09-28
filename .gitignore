@@ -23,6 +23,9 @@ data/processed/
 *.docx
 *.txt
 
+# Exception: Allow requirements.txt
+!requirements.txt
+
 # Models
 models/
 *.bin
