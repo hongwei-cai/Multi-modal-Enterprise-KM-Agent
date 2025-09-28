@@ -5,7 +5,7 @@ import pytest
 from src.rag.vector_database import VectorDatabase, get_vector_db
 
 
-@pytest.fixture
+@pytest.fixture(name="temp_db")
 def temp_db():
     """Fixture for a temporary ChromaDB instance."""
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -74,5 +74,5 @@ def test_delete_collection(temp_db):
 def test_get_vector_db():
     """Test the convenience function."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        db = get_vector_db(persist_directory=temp_dir)
+        db = get_vector_db(db_path=temp_dir)
         assert isinstance(db, VectorDatabase)

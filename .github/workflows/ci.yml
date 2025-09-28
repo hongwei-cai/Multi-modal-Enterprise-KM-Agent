@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: push
 
 jobs:
   test:
@@ -35,6 +35,9 @@ jobs:
         path: ~/.cache/huggingface
         key: hf-models-${{ hashFiles('requirements.txt') }}
         run: python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
 
     - name: Run unit tests
       env:
