@@ -10,7 +10,7 @@ try:
     from pypdf.errors import PdfReadError
 except ImportError as exc:
     raise ImportError(
-        "PyPDF2 is required for PDF parsing. Install it with: pip install PyPDF2"
+        "pypdf is required for PDF parsing. Install it with: pip install pypdf"
     ) from exc
 
 # Configure logging
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class PDFParser:
     """
-    PDF document parser using PyPDF2 for text extraction.
+    PDF document parser using pypdf for text extraction.
     """
 
     def __init__(self):
@@ -65,8 +65,8 @@ class PDFParser:
                 # Check if PDF is encrypted
                 if pdf_reader.is_encrypted:
                     self.logger.warning(
-                        "PDF is encrypted: %s. Attempting to \
-                            decrypt with empty password.",
+                        "PDF is encrypted: %s. Attempting to decrypt with \
+                        empty password.",
                         file_path,
                     )
                     try:
