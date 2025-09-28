@@ -6,7 +6,7 @@ from typing import Optional
 
 import requests  # type: ignore
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
 
 
 class LLMClient:
@@ -31,10 +31,23 @@ class LLMClient:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def generate(
-        self, prompt: str, max_length: int = 100, temperature: float = 0.7
+        self,
+        prompt: str,
+        max_length: Optional[int] = None,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+        do_sample: bool = True,
     ) -> str:
+        # Validate parameters
+        if max_length is None:
+            max_length = 100 if not self.is_cloud else 50  # Shorter for API
+        if not (0 < temperature <= 2):
+            raise ValueError("Temperature must be between 0 and 2")
+        if not (0 < top_p <= 1):
+            raise ValueError("Top-p must be between 0 and 1")
+
         if self.is_cloud:
-            # Use vLLM API
+            # Use vLLM API with parameters
             response = requests.post(
                 self.api_url,
                 json={
@@ -42,17 +55,20 @@ class LLMClient:
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": max_length,
                     "temperature": temperature,
+                    "top_p": top_p,
                 },
             )
+            response.raise_for_status()
             return response.json()["choices"][0]["message"]["content"]
         else:
-            # Local generation
+            # Local generation with parameters
             inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
             outputs = self.model.generate(
                 **inputs,
                 max_length=max_length,
                 temperature=temperature,
-                do_sample=True,
+                top_p=top_p,
+                do_sample=do_sample,
                 pad_token_id=self.tokenizer.pad_token_id
             )
             return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
