@@ -1,4 +1,6 @@
-from fastapi.testclient import TestClient
+from unittest.mock import patch
+
+from starlette.testclient import TestClient
 
 from src.api.main import app
 
@@ -17,3 +19,28 @@ def test_root():
     response = client.get("/")
     assert response.status_code == 200
     assert "Welcome" in response.json()["message"]
+
+
+@patch("src.api.main.get_indexing_pipeline")
+def test_upload_document(mock_get_indexer):
+    """Test document upload."""
+    mock_indexer = mock_get_indexer.return_value
+    mock_indexer.index_document.return_value = None
+
+    # Mock PDF file
+    files = {"file": ("test.pdf", b"fake pdf content", "application/pdf")}
+    response = client.post("/upload", files=files)
+    assert response.status_code == 200
+    assert "uploaded" in response.json()["message"]
+
+
+@patch("src.api.main.get_rag_pipeline")
+def test_ask_question(mock_get_rag):
+    """Test QA endpoint."""
+    mock_rag = mock_get_rag.return_value
+    mock_rag.answer_question.return_value = "Test answer"
+
+    payload = {"question": "What is AI?"}
+    response = client.post("/ask", json=payload)
+    assert response.status_code == 200
+    assert response.json()["answer"] == "Test answer"

@@ -99,7 +99,7 @@
    - Created base FastAPI application
    - Added health check endpoint
 
-2. **Commit Message**: `feat: add document upload and question endpoints`
+2. **Commit Message**: `feat: add document upload and question endpoints` ✅
    - Implemented document upload (PDF support)
    - Implemented QA endpoint (question→answer)
 
