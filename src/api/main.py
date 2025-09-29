@@ -1,8 +1,10 @@
 """
 FastAPI application for the Multi-modal Enterprise KM Agent.
 """
+import json
 import logging
 import os
+import time
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
@@ -29,7 +31,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Configure structured logging
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+# Custom JSON formatter for structured logs
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            "timestamp": self.formatTime(record),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+        }
+        if hasattr(record, "extra"):
+            log_entry.update(record.extra)
+        return json.dumps(log_entry)
+
+
+# Apply formatter to logger
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
@@ -46,6 +72,54 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
                 status_code=500,
                 content={"detail": "Internal server error", "error": str(e)},
             )
+
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+
+        # Log request
+        logger.info(
+            "Request started",
+            extra={
+                "method": request.method,
+                "url": str(request.url),
+                "headers": dict(request.headers),
+                "client_ip": request.client.host if request.client else None,
+            },
+        )
+
+        try:
+            response = await call_next(request)
+            process_time = time.time() - start_time
+
+            # Log response
+            logger.info(
+                "Request completed",
+                extra={
+                    "method": request.method,
+                    "url": str(request.url),
+                    "status_code": response.status_code,
+                    "process_time": f"{process_time:.4f}s",
+                },
+            )
+
+            # Add latency header to response
+            response.headers["X-Process-Time"] = str(process_time)
+            return response
+        except Exception as e:
+            process_time = time.time() - start_time
+            logger.error(
+                "Request failed",
+                extra={
+                    "method": request.method,
+                    "url": str(request.url),
+                    "error": str(e),
+                    "process_time": f"{process_time:.4f}s",
+                },
+                exc_info=True,
+            )
+            raise
 
 
 # Pydantic models for request/response validation
@@ -109,6 +183,8 @@ async def upload_document(file: UploadFile = File(...), indexer=Depends(get_inde
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
     try:
+        logger.info("Document upload started", extra={"file_name": file.filename})
+
         # Save file temporarily
         import tempfile
 
@@ -118,6 +194,8 @@ async def upload_document(file: UploadFile = File(...), indexer=Depends(get_inde
 
         # Index the document
         indexer.index_document(temp_path)
+
+        logger.info("Document indexed successfully", extra={"file_name": file.filename})
 
         # Clean up
         os.unlink(temp_path)
@@ -132,11 +210,19 @@ async def upload_document(file: UploadFile = File(...), indexer=Depends(get_inde
 async def ask_question(request: QuestionRequest, rag=Depends(get_rag)):
     """Answer a question using RAG."""
     try:
+        logger.info("Question asked", extra={"user_question": request.question})
+
         answer = rag.answer_question(
             question=request.question,
             top_k=request.top_k,
             temperature=request.temperature,
         )
+
+        logger.info(
+            "Answer generated",
+            extra={"user_question": request.question, "answer_length": len(answer)},
+        )
+
         return AnswerResponse(question=request.question, answer=answer)
     except Exception as e:
         logger.error(f"QA failed: {e}")
@@ -145,6 +231,7 @@ async def ask_question(request: QuestionRequest, rag=Depends(get_rag)):
 
 # Add middleware
 app.add_middleware(ErrorHandlingMiddleware)
+app.add_middleware(LoggingMiddleware)
 
 
 # Optional: Root endpoint
