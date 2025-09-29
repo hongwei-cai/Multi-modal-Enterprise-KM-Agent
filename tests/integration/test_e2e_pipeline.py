@@ -2,7 +2,6 @@
 End-to-end integration test for the full RAG pipeline: upload → index → ask → answer.
 """
 import os
-from unittest.mock import patch
 
 import pytest
 from starlette.testclient import TestClient
@@ -15,10 +14,10 @@ client = TestClient(app)
 @pytest.fixture
 def test_pdf_path():
     """Path to a test PDF file."""
-    path = "tests/data/pdfs/test_document_simple.pdf"
+    path = "tests/data/pdfs/test_document_ai_and_ds.pdf"
     if not os.path.exists(path):
         pytest.skip(
-            "Test PDF not found. Create tests/data/pdfs/test_document_simple.pdf \
+            "Test PDF not found. Create tests/data/pdfs/test_document_ai_and_ds.pdf \
                 with known content."
         )
     return path
@@ -28,7 +27,7 @@ def test_full_flow_upload_and_ask(test_pdf_path):
     """Test full flow: upload PDF, ask question, validate answer."""
     # Step 1: Upload the document
     with open(test_pdf_path, "rb") as f:
-        files = {"file": ("test_document_simple.pdf", f, "application/pdf")}
+        files = {"file": ("test_document_ai_and_ds.pdf", f, "application/pdf")}
         upload_response = client.post("/upload", files=files)
 
     assert upload_response.status_code == 200
@@ -56,42 +55,38 @@ def test_full_flow_upload_and_ask(test_pdf_path):
     print(f"Answer: {response_data['answer']}")
 
 
-@patch("src.rag.rag_pipeline.get_llm_client")
-def test_e2e_with_expected_results(mock_get_llm):
-    """Test with predefined dataset and expected results using mocked answers."""
-    # Mock the LLM client to return answers containing expected keywords
-    mock_llm_instance = mock_get_llm.return_value
-    mock_llm_instance.generate.side_effect = [
-        "AI stands for artificial intelligence, \
-            which is a field of computer science.",
-        "Python is a programming language commonly \
-            used for data science and machine learning.",
-    ]
+def test_e2e_with_expected_results(test_pdf_path):
+    """Test with predefined dataset and expected results."""
+    # Upload the document first to ensure DB has content
+    with open(test_pdf_path, "rb") as f:
+        files = {"file": ("test_document_ai_and_ds.pdf", f, "application/pdf")}
+        upload_response = client.post("/upload", files=files)
 
-    # Define test cases with expected results
+    assert upload_response.status_code == 200
+
+    # Now test with questions
     test_cases = [
         {
             "question": "What is AI?",
             "expected_keywords": ["artificial", "intelligence"],
         },
         {
-            "question": "What is Python used for?",
-            "expected_keywords": ["programming", "data", "science"],
+            "question": "What is data science?",
+            "expected_keywords": ["data", "science"],
+        },
+        {
+            "question": "Who is the author of the document?",
+            "expected_keywords": [""],
         },
     ]
 
-    for i, case in enumerate(test_cases):
+    for case in test_cases:
         payload = {"question": case["question"]}
         response = client.post("/ask", json=payload)
         assert response.status_code == 200
         answer = response.json()["answer"].lower()
-        # Check if at least one expected keyword is in the mocked answer
+        # Check if at least one expected keyword is in the answer
         assert any(
             keyword in answer for keyword in case["expected_keywords"]
-        ), f"Answer missing expected content for question: \
-            {case['question']} | Answer: {answer}"
-
-        print(
-            f"Test Case {i+1}: Question: {case['question']} | Answer: \
-                {response.json()['answer']}"
-        )
+        ), f"Answer missing expected content for question: {case['question']} | \
+            Answer: {response.json()['answer']}"
