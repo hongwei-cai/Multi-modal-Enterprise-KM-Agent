@@ -259,32 +259,45 @@ docker-compose down -v
 
 ## 📚 API Documentation
 
-### Core Endpoints
+The API provides endpoints for document upload and question-answering using the RAG pipeline.
 
-**POST /upload**
-- Upload and process documents
-- Supports PDF, PNG, JPG formats
-- Returns success message
+### Endpoints
 
-**POST /ask**
-- Text-based question answering
-```json
-{
-  "question": "What is our company's security policy?",
-  "top_k": 5,
-  "temperature": 0.7
-}
-```
+#### Health Check
+- **GET** `/health`
+- **Description**: Check if the API is running.
+- **Response**: `{"status": "healthy", "message": "API is running"}`
 
-**POST /v1/multimodal/query**
-- Multimodal question answering
-```json
-{
-  "question": "Explain this architecture diagram",
-  "image": "base64_encoded_image",
-  "document_context": "optional_text_context"
-}
-```
+#### Upload Document
+- **POST** `/upload`
+- **Description**: Upload and index a PDF document.
+- **Request**: Multipart form with `file` (PDF only).
+- **Response**: `{"message": "Document uploaded and indexed successfully"}`
+- **Error**: 400 for invalid file type, 500 for processing errors.
+
+#### Ask Question
+- **POST** `/ask`
+- **Description**: Answer a question using the RAG pipeline.
+- **Request Body**:
+  ```json
+  {
+    "question": "What is AI?",
+    "top_k": 5,
+    "temperature": 0.7
+  }
+  ```
+
+#### Multimodal Query
+- **POST** `/v1/multimodal/query`
+- **Description**: Answer a question with text and image input.
+- **Request Body**:
+  ```json
+  {
+    "question": "Explain this architecture diagram",
+    "image": "base64_encoded_image",
+    "document_context": "optional_text_context"
+  }
+  ```
 
 ### Example Usage
 
@@ -301,6 +314,44 @@ curl -X POST "http://localhost:8000/ask" \
     "question": "What are the system requirements?"
   }'
 ```
+
+```bash
+Response: {"question": "What is AI?", "answer": "Generated answer"}
+Error: 422 for validation errors, 500 for generation errors.
+OpenAPI Specification
+Interactive docs: http://localhost:8000/docs
+JSON spec: http://localhost:8000/openapi.json
+```
+### Curl Examples
+
+#### Health Check
+```bash
+curl http://localhost:8000/health
+```
+
+#### Upload a PDF
+```bash
+curl -X POST \
+  -F "file=@path/to/your/document.pdf" \
+  http://localhost:8000/upload
+```
+
+#### Ask a Question
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is machine learning?", "top_k": 3, "temperature": 0.5}' \
+  http://localhost:8000/ask
+```
+
+#### Check Response Headers (for Latency)
+```bash
+curl -v http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Explain AI"}'
+# Look for X-Process-Time in response headers
+```
+
 
 ## 🔧 Development Guide
 
