@@ -117,7 +117,7 @@
    - Built optimized-size Docker image
    - Staged dependency installation and code copying
 
-2. **Commit Message**: `feat: add docker-compose for local development`
+2. **Commit Message**: `feat: add docker-compose for local development` ✅
    - Created `docker-compose.yml` to coordinate services
    - Configured ChromaDB and API dependencies
 

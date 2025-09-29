@@ -2,6 +2,7 @@
 FastAPI application for the Multi-modal Enterprise KM Agent.
 """
 import logging
+import os
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
@@ -79,13 +80,15 @@ class AnswerResponse(BaseModel):
     )
 
 
-# Dependency to get pipelines (can be configured via env)
+# Dependency to get pipelines with configurable DB path
 def get_indexer():
-    return get_indexing_pipeline()
+    db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")  # Default to local path
+    return get_indexing_pipeline(db_path=db_path)
 
 
 def get_rag():
-    return get_rag_pipeline()
+    db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")  # Default to local path
+    return get_rag_pipeline(db_path=db_path)
 
 
 @app.get("/health", summary="Health Check", description="Check if the API is running")
@@ -107,7 +110,6 @@ async def upload_document(file: UploadFile = File(...), indexer=Depends(get_inde
 
     try:
         # Save file temporarily
-        import os
         import tempfile
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:

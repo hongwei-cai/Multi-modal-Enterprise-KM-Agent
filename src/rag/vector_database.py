@@ -1,7 +1,9 @@
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
-import chromadb
+from chromadb import Client as ChromaClient
+from chromadb import EphemeralClient, HttpClient
 from chromadb.config import Settings
 
 from configs.vector_db_config import persist_directory
@@ -22,12 +24,22 @@ class VectorDatabase:
         Args:
             persist_directory: Directory to persist the database.
         """
-        self.client = chromadb.PersistentClient(
-            path=persist_directory,
-            settings=Settings(allow_reset=True, anonymized_telemetry=False),
-        )
-
+        if persist_directory.startswith("http"):
+            # Client mode: Connect to ChromaDB server
+            host = persist_directory.split("://")[1].split(":")[0]
+            port = int(persist_directory.split(":")[-1])
+            self.client = HttpClient(host=host, port=port)  # Use HttpClient
+        else:
+            if persist_directory == ":memory:" or os.getenv("PYTEST_CURRENT_TEST"):
+                # Use ephemeral (in-memory) client during tests to avoid conflicts
+                self.client = EphemeralClient()
+            else:
+                # Local persistent mode
+                self.client = ChromaClient(
+                    Settings(persist_directory=persist_directory)
+                )
         self.collection = None
+
         logger.info("ChromaDB client initialized.")
 
     def create_collection(
@@ -46,10 +58,13 @@ class VectorDatabase:
                         chunks and embeddings"
             }
 
-        self.collection = self.client.get_or_create_collection(
-            name=name, metadata=metadata
-        )
-        logger.info("Collection '%s' created or retrieved.", name)
+        if self.collection is None:
+            self.collection = self.client.get_or_create_collection(
+                name, metadata=metadata
+            )
+            logger.info("Collection '%s' created or retrieved.", name)
+        else:
+            logger.info("Collection '%s' already exists.", name)
 
     def add_documents(
         self,
