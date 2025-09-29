@@ -1,5 +1,3 @@
-# Multi-modal-Enterprise-KM-Agent
-
 # Multimodal Enterprise Knowledge Management Agent
 
 <div align="center">
@@ -54,7 +52,7 @@ graph TB
 ## 🛠 Technology Stack
 
 ### Infrastructure
-- **Python 3.9+** - Core programming language
+- **Python 3.10+** - Core programming language
 - **Docker** - Containerization
 - **Kubernetes** - Orchestration (AWS EKS)
 - **AWS** - Cloud infrastructure (EC2, S3, EKS)
@@ -104,7 +102,7 @@ Multi-modal-Enterprise-KM-Agent/
 - NVIDIA GPU with CUDA 11.8+ (for local development)
 - 16GB+ RAM recommended
 
-### Local Development
+### Local Development with Docker
 
 1. **Clone the repository**
 ```bash
@@ -112,22 +110,49 @@ git clone https://github.com/your-org/multimodal-knowledge-agent.git
 cd multimodal-knowledge-agent
 ```
 
-2. **Set up environment**
+2. **Start services with Docker Compose**
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+docker-compose up --build -d
 ```
 
-3. **Start services with Docker Compose**
+This command:
+
+- Builds the API image using the multi-stage Dockerfile
+- Starts ChromaDB on port 8001
+- Starts the API on port 8000
+- Mounts volumes for persistent data and config
+
+3. **Verify services are running**
 ```bash
-docker-compose up -d
+docker-compose ps
 ```
+Expected output shows both chromadb and api as "Up".
 
 4. **Access the application**
 - API: http://localhost:8000
 - API Documentation: http://localhost:8000/docs
-- MLflow UI: http://localhost:5000
+- ChromaDB: http://localhost:8001 (for debugging)
+
+
+Manual Python Setup (Alternative)
+1. **Set up environment**
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r [requirements.txt](requirements.txt)
+```
+
+2. **Start ChromaDB separately**
+```bash
+docker run -p 8001:8000 chromadb/chroma:latest
+```
+
+3. **Run the API**
+```bash
+export CHROMA_DB_PATH=http://localhost:8001
+uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+```
+
 
 ### Basic Usage
 
@@ -151,21 +176,103 @@ image_path = "path/to/diagram.png"
 response = agent.ask_multimodal_question(image_question, image_path)
 ```
 
+## 🐳 Docker Deployment Guide
+
+### Prerequisites
+- Docker and Docker Compose installed
+- Git (for cloning the repository)
+
+### Quick Start
+1. **Clone and Build**
+   ```bash
+   git clone https://github.com/yourusername/Multi-modal-Enterprise-KM-Agent.git
+   cd Multi-modal-Enterprise-KM-Agent
+   docker-compose up --build -d
+   ```
+
+2. **Verify Services**
+   ```bash
+   # Check service status
+   docker-compose ps
+
+   # Check API health
+   curl http://localhost:8000/health
+   ```
+
+### Testing the API
+1. **Upload a Document**
+   ```bash
+   curl -X POST \
+     -F "file=@path/to/your/document.pdf" \
+     http://localhost:8000/upload
+   ```
+
+2. **Ask Questions**
+   ```bash
+   curl -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"question": "What is this document about?"}' \
+     http://localhost:8000/ask
+   ```
+
+### Service Architecture
+- **API Service**: FastAPI application (Port 8000)
+  - Handles document uploads and Q&A requests
+  - Integrates RAG pipeline for question answering
+- **ChromaDB**: Vector database (Port 8001)
+  - Stores document embeddings
+  - Enables semantic search
+
+### Environment Configuration
+Create a `.env` file in the project root:
+```ini
+VLLM_MODEL_NAME=microsoft/DialoGPT-medium
+CHROMA_DB_PATH=http://chromadb:8000
+```
+
+### Development with Docker
+```bash
+# Start services in development mode
+docker-compose up --build
+
+# View logs
+docker-compose logs -f api
+docker-compose logs -f chromadb
+
+# Stop services
+docker-compose down
+
+# Clean up (including volumes)
+docker-compose down -v
+```
+
+### Troubleshooting
+- If ChromaDB connection fails, ensure the service is healthy:
+  ```bash
+  curl http://localhost:8001/api/v1/heartbeat
+  ```
+- Check logs for specific service issues:
+  ```bash
+  docker-compose logs api    # API logs
+  docker-compose logs -f api # Follow API logs
+  ```
+
 ## 📚 API Documentation
 
 ### Core Endpoints
 
-**POST /v1/documents/upload**
+**POST /upload**
 - Upload and process documents
 - Supports PDF, PNG, JPG formats
-- Returns document ID for reference
+- Returns success message
 
-**POST /v1/query**
+**POST /ask**
 - Text-based question answering
 ```json
 {
   "question": "What is our company's security policy?",
-  "document_ids": ["doc_123"]  # optional
+  "top_k": 5,
+  "temperature": 0.7
 }
 ```
 
@@ -183,12 +290,12 @@ response = agent.ask_multimodal_question(image_question, image_path)
 
 ```bash
 # Upload a document
-curl -X POST "http://localhost:8000/v1/documents/upload" \
+curl -X POST "http://localhost:8000/upload" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@technical_spec.pdf"
 
 # Ask a question
-curl -X POST "http://localhost:8000/v1/query" \
+curl -X POST "http://localhost:8000/ask" \
   -H "Content-Type: application/json" \
   -d '{
     "question": "What are the system requirements?"
