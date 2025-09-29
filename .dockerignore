@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.venv
+.pytest_cache
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs and tests (not needed in image)
+docs/
+tests/
+README.md
+*.md
+
+# Models and data (download at runtime if needed)
+models/
+data/
+*.pdf
+*.txt
+# Exception: Allow requirements.txt
+!requirements.txt
+
+# Docker
+Dockerfile
+docker-compose.yml
