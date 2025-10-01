@@ -39,6 +39,7 @@ services:
       - VLLM_MODEL_NAME=microsoft/DialoGPT-medium
       - CLOUD_ENV=
       - CHROMA_DB_PATH=http://chromadb:8000  # Internal DNS resolves to service
+      - CHROMA_PERSIST_DIR=./data/processed/chroma_db  # Add this for Docker override
     volumes:
       - ./configs:/app/configs:ro  # Read-only for safety, live edits
       # Optional: mount source for dev (comment out in prod)

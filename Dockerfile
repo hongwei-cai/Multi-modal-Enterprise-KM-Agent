@@ -60,6 +60,7 @@ WORKDIR /app
 
 # ---- Copy Application Code ----
 # Order matters: copy least frequently changed files first for caching
+COPY .env .
 COPY src/ ./src/
 COPY configs/ ./configs/
 COPY scripts/ ./scripts/
