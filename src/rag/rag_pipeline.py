@@ -34,7 +34,7 @@ class RAGPipeline:
         top_k: Optional[int] = None,
         temperature: float = 0.7,
         top_p: float = 0.9,
-    ) -> str:
+    ) -> dict:  # Change return type to dict
         """
         Answer a question using RAG.
 
@@ -50,7 +50,7 @@ class RAGPipeline:
         # Step 1: Retrieve context
         context_docs = self.retriever.retrieve(question, top_k=top_k)
         if not context_docs:
-            return "No relevant context found."
+            return {"answer": "No relevant context found.", "context_docs": []}
 
         # Step 2: Format prompt with context truncation
         prompt = self.prompt_template.format_prompt(
@@ -65,7 +65,10 @@ class RAGPipeline:
         )
 
         logger.info(f"Answered question: {question[:50]}...")
-        return answer
+        return {
+            "answer": answer,
+            "context_docs": [doc["document"] for doc in context_docs],
+        }
 
 
 # Convenience function

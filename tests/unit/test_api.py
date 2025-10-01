@@ -48,12 +48,17 @@ def test_upload_invalid_file(mock_get_indexer):
 def test_ask_question(mock_get_rag):
     """Test QA endpoint."""
     mock_rag = mock_get_rag.return_value
-    mock_rag.answer_question.return_value = "Test answer"
+    mock_rag.answer_question.return_value = {
+        "answer": "Test answer",
+        "context_docs": ["Doc1", "Doc2"],
+    }
 
     payload = {"question": "What is AI?"}
     response = client.post("/ask", json=payload)
     assert response.status_code == 200
-    assert response.json()["answer"] == "Test answer"
+    data = response.json()
+    assert data["answer"] == "Test answer"
+    assert data["context_docs"] == ["Doc1", "Doc2"]
 
 
 @patch("src.api.main.get_rag_pipeline")

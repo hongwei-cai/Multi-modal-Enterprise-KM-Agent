@@ -29,7 +29,7 @@ class PromptTemplate:
         self,
         question: str,
         context_docs: List[Dict[str, Any]],
-        max_context_length: int = 2000,
+        max_context_length: int = 500,
     ) -> str:
         """
         Format the prompt with context and question.

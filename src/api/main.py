@@ -208,22 +208,17 @@ async def upload_document(file: UploadFile = File(...), indexer=Depends(get_inde
 
 @app.post("/ask", response_model=AnswerResponse)
 async def ask_question(request: QuestionRequest, rag=Depends(get_rag)):
-    """Answer a question using RAG."""
     try:
-        logger.info("Question asked", extra={"user_question": request.question})
-
-        answer = rag.answer_question(
+        result = rag.answer_question(
             question=request.question,
             top_k=request.top_k,
             temperature=request.temperature,
         )
-
-        logger.info(
-            "Answer generated",
-            extra={"user_question": request.question, "answer_length": len(answer)},
+        return AnswerResponse(
+            question=request.question,
+            answer=result["answer"],
+            context_docs=result["context_docs"],
         )
-
-        return AnswerResponse(question=request.question, answer=answer)
     except Exception as e:
         logger.error(f"QA failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate answer")
