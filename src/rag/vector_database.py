@@ -1,12 +1,12 @@
 import logging
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from chromadb import Client as ChromaClient
 from chromadb import EphemeralClient, HttpClient
 from chromadb.config import Settings
 
-from configs.vector_db_config import persist_directory
 from src.rag.embedding import EmbeddingModel, get_embedding_model
 
 logger = logging.getLogger(__name__)
@@ -17,21 +17,48 @@ class VectorDatabase:
     ChromaDB client wrapper for vector storage and retrieval.
     """
 
-    def __init__(self, persist_directory: str = persist_directory):
+    def __init__(self, persist_directory: Optional[str] = None):
         """
         Initialize ChromaDB client.
 
         Args:
-            persist_directory: Directory to persist the database.
+            persist_directory: Directory to persist the database. \
+                Defaults to env var or fallback.
         """
+        if persist_directory is None:
+            persist_directory = os.getenv("CHROMA_PERSIST_DIR")
+            if not persist_directory:
+                # Fallback: Project-root-relative path
+                persist_directory = str(
+                    Path(__file__).parent.parent.parent
+                    / "data"
+                    / "processed"
+                    / "chroma_db"
+                )
+                logger.warning(
+                    "CHROMA_PERSIST_DIR not set, using fallback: %s", persist_directory
+                )
+
+        # Validate path (optional: ensure it's writable or exists)
+        if not persist_directory.startswith("http") and persist_directory != ":memory:":
+            try:
+                Path(persist_directory).mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                logger.error(
+                    "Invalid persist_directory '%s': %s. Falling back to :memory:",
+                    persist_directory,
+                    e,
+                )
+                persist_directory = ":memory:"
+
         if persist_directory.startswith("http"):
             # Client mode: Connect to ChromaDB server
             host = persist_directory.split("://")[1].split(":")[0]
             port = int(persist_directory.split(":")[-1])
-            self.client = HttpClient(host=host, port=port)  # Use HttpClient
+            self.client = HttpClient(host=host, port=port)
         else:
             if persist_directory == ":memory:" or os.getenv("PYTEST_CURRENT_TEST"):
-                # Use ephemeral (in-memory) client during tests to avoid conflicts
+                # Use ephemeral (in-memory) client during tests
                 self.client = EphemeralClient()
             else:
                 # Local persistent mode
@@ -40,7 +67,9 @@ class VectorDatabase:
                 )
         self.collection = None
 
-        logger.info("ChromaDB client initialized.")
+        logger.info(
+            "ChromaDB client initialized with persist_directory: %s", persist_directory
+        )
 
     def create_collection(
         self, name: str = "documents", metadata: Optional[Dict[str, Any]] = None
@@ -146,11 +175,9 @@ def get_vector_db(db_path: Optional[str] = None) -> VectorDatabase:
     Get a VectorDatabase instance.
 
     Args:
-        db_path: Path to vector DB. If None, uses config default.
+        db_path: Path to vector DB. If None, uses env var or fallback.
 
     Returns:
         VectorDatabase instance.
     """
-    if db_path is None:
-        db_path = persist_directory  # Fallback to config
     return VectorDatabase(persist_directory=db_path)

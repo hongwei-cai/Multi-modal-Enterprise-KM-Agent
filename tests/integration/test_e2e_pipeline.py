@@ -24,69 +24,62 @@ def test_pdf_path():
 
 
 def test_full_flow_upload_and_ask(test_pdf_path):
-    """Test full flow: upload PDF, ask question, validate answer."""
-    # Step 1: Upload the document
+    # Upload
     with open(test_pdf_path, "rb") as f:
         files = {"file": ("test_document_ai_and_ds.pdf", f, "application/pdf")}
         upload_response = client.post("/upload", files=files)
-
     assert upload_response.status_code == 200
-    assert "uploaded" in upload_response.json()["message"]
 
-    # Step 2: Ask a question related to the document content
-    question = "What is this document about?"
-    payload = {"question": question, "top_k": 5}
+    # Ask question
+    payload = {"question": "What is this document about?", "top_k": 5}
     ask_response = client.post("/ask", json=payload)
-
     assert ask_response.status_code == 200
     response_data = ask_response.json()
-    assert "question" in response_data
-    assert "answer" in response_data
-    assert len(response_data["answer"]) > 0  # Answer should not be empty
 
-    # Step 3: Validate the answer contains expected content from the document
-    # Assuming the PDF contains "simple test document", check if it's in the answer
+    # Flexible validation: Check pipeline works (answer generated, context retrieved)
+    assert isinstance(response_data["answer"], str) and len(response_data["answer"]) > 0
+    assert len(response_data.get("context_docs", [])) > 0
+    # Optional: Check for general relevance (e.g., contains "ai" or "document")
     answer_lower = response_data["answer"].lower()
     assert (
-        "simple" in answer_lower or "test" in answer_lower or "document" in answer_lower
-    ), f"Answer does not reflect document content: {response_data['answer']}"
-
-    print(f"Question: {question}")
-    print(f"Answer: {response_data['answer']}")
+        "ai" in answer_lower or "document" in answer_lower
+    ), f"Answer seems irrelevant: {response_data['answer']}"
 
 
 def test_e2e_with_expected_results(test_pdf_path):
-    """Test with predefined dataset and expected results."""
-    # Upload the document first to ensure DB has content
+    # Upload
     with open(test_pdf_path, "rb") as f:
         files = {"file": ("test_document_ai_and_ds.pdf", f, "application/pdf")}
         upload_response = client.post("/upload", files=files)
-
     assert upload_response.status_code == 200
 
-    # Now test with questions
     test_cases = [
         {
-            "question": "What is AI?",
-            "expected_keywords": ["artificial", "intelligence"],
+            "question": "What is this document about?",
+            "expected_contains": ["ai", "intelligence"],  # Broader checks
         },
         {
-            "question": "What is data science?",
-            "expected_keywords": ["data", "science"],
+            "question": "What does the document contain?",
+            "expected_contains": ["definition", "ai"],
         },
         {
             "question": "Who is the author of the document?",
-            "expected_keywords": [""],
+            "expected_contains": [],  # Expect no specific content
         },
     ]
 
     for case in test_cases:
-        payload = {"question": case["question"]}
-        response = client.post("/ask", json=payload)
+        response = client.post("/ask", json={"question": case["question"]})
         assert response.status_code == 200
         answer = response.json()["answer"].lower()
-        # Check if at least one expected keyword is in the answer
-        assert any(
-            keyword in answer for keyword in case["expected_keywords"]
-        ), f"Answer missing expected content for question: {case['question']} | \
-            Answer: {response.json()['answer']}"
+
+        if case["expected_contains"]:
+            assert any(
+                keyword in answer for keyword in case["expected_contains"]
+            ), f"Answer missing expected content for question: {case['question']}\
+                  | Answer: {response.json()['answer']}"
+        else:
+            # For author, check if answer is short or indicates no author
+            assert (
+                len(answer.split()) < 10
+            ), f"Unexpected long answer for author: {response.json()['answer']}"

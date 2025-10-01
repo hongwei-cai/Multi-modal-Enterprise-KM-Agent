@@ -4,44 +4,58 @@ services:
   chromadb:
     image: chromadb/chroma:latest
     container_name: chromadb
+    restart: unless-stopped
     ports:
-      - "8001:8000"  # Expose ChromaDB on 8001 to avoid conflict with API
+      - "8001:8000"  # Expose ChromaDB UI/API externally on 8001
     volumes:
-      - chromadb_data:/chroma/chroma  # Persist data
+      - chromadb_data:/chroma/chroma  # Persistent storage for data
     environment:
       - CHROMA_SERVER_HOST=0.0.0.0
       - CHROMA_SERVER_HTTP_PORT=8000
+      # Optional telemetry (can be removed in prod)
       - OTEL_SERVICE_NAME=chromadb
       - OTEL_TRACES_EXPORTER=console
       - OTEL_METRICS_EXPORTER=none
       - OTEL_LOGS_EXPORTER=none
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/heartbeat')"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/api/v1/heartbeat"]  # Faster than Python
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 30s
 
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: multi-modal-km-agent-api
-    ports:
-      - "8000:8000"  # API on 8000
+    restart: unless-stopped
     # depends_on:
     #   chromadb:
-    #     condition: service_healthy  # Wait for ChromaDB to be healthy
+    #     condition: service_healthy
+    ports:
+      - "8000:8000"  # API exposed on localhost:8000
     environment:
       - VLLM_MODEL_NAME=microsoft/DialoGPT-medium
       - CLOUD_ENV=
-      - CHROMA_DB_PATH=http://chromadb:8000  # Connect to ChromaDB service
+      - CHROMA_DB_PATH=http://chromadb:8000  # Internal DNS resolves to service
+      - CHROMA_PERSIST_DIR=./data/processed/chroma_db  # Add this for Docker override
     volumes:
-      - ./configs:/app/configs  # Mount configs for easy editing
+      - ./configs:/app/configs:ro  # Read-only for safety, live edits
+      # Optional: mount source for dev (comment out in prod)
+      # - ./src:/app/src
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
+    # Optional: Resource constraints
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 2G
 
 volumes:
   chromadb_data:

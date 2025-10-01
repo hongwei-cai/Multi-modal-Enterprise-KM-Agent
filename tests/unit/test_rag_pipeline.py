@@ -34,8 +34,9 @@ def test_rag_pipeline_init(mock_components):
 def test_answer_question(mock_components):
     """Test end-to-end question answering."""
     pipeline = RAGPipeline()
-    answer = pipeline.answer_question("What is AI?")
-    assert answer == "Generated answer"
+    response = pipeline.answer_question("What is AI?")
+    assert response["answer"] == "Generated answer"
+    assert response["context_docs"] == ["Context text"]
 
 
 def test_answer_question_no_context(mock_components):
@@ -46,8 +47,9 @@ def test_answer_question_no_context(mock_components):
         mock_ret.return_value = mock_retriever
 
         pipeline = RAGPipeline()
-        answer = pipeline.answer_question("Test?")
-        assert answer == "No relevant context found."
+        response = pipeline.answer_question("Test?")
+        assert response["answer"] == "No relevant context found."
+        assert response["context_docs"] == []
 
 
 def test_get_rag_pipeline():
