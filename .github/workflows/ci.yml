@@ -53,10 +53,10 @@ jobs:
         env:
           CHROMA_PERSIST_DIR: ./test_chroma_db_unit
         run: |
-          pytest tests/unit --cov=./ --cov-report=xml
+          pytest tests/unit --cov=. --cov-report=xml
 
       - name: Run integration tests
         env:
           CHROMA_PERSIST_DIR: ./test_chroma_db_integration
         run: |
-          pytest tests/integration --cov=./ --cov-append --cov-report=xml
+          pytest tests/integration --cov=. --cov-append --cov-report=xml
