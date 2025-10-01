@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from src.rag.document_parser import parse_pdf
 from src.rag.embedding import get_embedding_model
-from src.rag.text_chunker import chunk_text_by_sentences
+from src.rag.text_chunker import TextChunker
 from src.rag.vector_database import get_vector_db
 
 logger = logging.getLogger(__name__)
@@ -50,9 +50,10 @@ class IndexingPipeline:
 
             # Step 2: Chunk text
             logger.info("Chunking text")
-            chunks = chunk_text_by_sentences(
-                text, chunk_size=chunk_size, overlap=overlap
+            chunker = TextChunker(
+                chunk_size=chunk_size, overlap=overlap, strategy="sentences"
             )
+            chunks = chunker.chunk_text(text)
             if not chunks:
                 raise ValueError("No chunks generated")
 

@@ -45,24 +45,20 @@ class Retriever:
 
         # Query the vector DB
         results = self.db.collection.query(
-            query_embeddings=[query_embedding], n_results=top_k
+            query_embeddings=[query_embedding],
+            n_results=top_k,
+            include=["documents", "metadatas"],  # Only fetch needed fields
         )
 
-        # Format results
-        retrieved = []
-        for i in range(len(results["documents"][0])):
-            retrieved.append(
-                {
-                    "document": results["documents"][0][i],
-                    "metadata": results["metadatas"][0][i],
-                    "distance": results["distances"][0][i]
-                    if "distances" in results
-                    else None,
-                }
-            )
+        # Process results efficiently
+        retrieved_docs = []
+        for doc, metadata in zip(results["documents"][0], results["metadatas"][0]):
+            retrieved_docs.append({"document": doc, "metadata": metadata})
 
-        logger.info(f"Retrieved {len(retrieved)} documents for query: {query}")
-        return retrieved
+        logger.info(
+            f"Retrieved {len(retrieved_docs)} documents for query: {query[:50]}..."
+        )
+        return retrieved_docs
 
 
 # Convenience function
