@@ -10,7 +10,11 @@ from typing import List, Optional
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import (  # Add field_validator, remove validator
+    BaseModel,
+    Field,
+    field_validator,
+)
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.rag.indexing_pipeline import get_indexing_pipeline
@@ -139,7 +143,8 @@ class QuestionRequest(BaseModel):
         0.7, ge=0.0, le=2.0, description="Generation temperature"
     )
 
-    @validator("question")
+    @field_validator("question")  # Change to field_validator
+    @classmethod
     def question_not_empty(cls, v):
         if not v.strip():
             raise ValueError("Question cannot be empty or whitespace")

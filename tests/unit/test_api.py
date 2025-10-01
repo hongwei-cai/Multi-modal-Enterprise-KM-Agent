@@ -68,4 +68,6 @@ def test_ask_invalid_question(mock_get_rag):
     payload = {"question": ""}
     response = client.post("/ask", json=payload)
     assert response.status_code == 422
-    assert "at least 1 characters" in response.json()["detail"][0]["msg"]
+    assert (
+        "String should have at least 1 character" in response.json()["detail"][0]["msg"]
+    )
