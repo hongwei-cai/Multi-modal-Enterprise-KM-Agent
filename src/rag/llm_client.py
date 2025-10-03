@@ -7,6 +7,7 @@ from typing import List, Optional
 
 import requests  # type: ignore
 
+from .experiment_tracker import track_model_performance
 from .model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,14 @@ class LLMClient:
         if not (0 < top_p <= 1):
             raise ValueError("Top-p must be between 0 and 1")
 
+        # Track performance
+        import time
+
+        import psutil
+
+        start_time = time.time()
+        memory_before = psutil.virtual_memory().used / (1024**2)  # MB
+
         if self.is_cloud:
             # Use vLLM API with parameters
             response = requests.post(
@@ -124,6 +133,35 @@ class LLMClient:
         # Post-process response
         if "Answer:" in response:
             response = response.split("Answer:")[-1].strip()
+
+        # Track performance metrics
+        try:
+            end_time = time.time()
+            memory_after = psutil.virtual_memory().used / (1024**2)  # MB
+            latency_ms = (end_time - start_time) * 1000
+            memory_delta = memory_after - memory_before
+
+            # Get model version safely
+            model_version = "unknown"
+            if (
+                hasattr(self.model_manager, "model_versions")
+                and self.model_name in self.model_manager.model_versions
+            ):
+                model_version = self.model_manager.model_versions[
+                    self.model_name
+                ].version
+
+            # Track the performance
+            track_model_performance(
+                model_name=self.model_name,
+                model_version=model_version,
+                operation="generate",
+                latency_ms=latency_ms,
+                memory_mb=memory_delta,
+            )
+        except Exception as e:
+            logger.warning("Failed to track generation performance: %s", e)
+
         return response
 
     def benchmark_current_model(
