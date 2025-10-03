@@ -4,6 +4,9 @@ Test script for MLflow experiment tracking functionality.
 
 import os
 import sys
+import tempfile
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
@@ -16,11 +19,31 @@ from rag.experiment_tracker import (  # noqa: E402
 )
 
 
-def test_basic_experiment_tracking():
+@pytest.fixture
+def temp_mlflow_dir():
+    """Create a temporary directory for MLflow experiments."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        yield temp_dir
+
+
+@pytest.fixture
+def tracker(temp_mlflow_dir):
+    """Create an MLflowExperimentTracker with temporary database."""
+    db_path = os.path.join(temp_mlflow_dir, "experiments.db")
+    tracker = MLflowExperimentTracker(database_path=db_path)
+    yield tracker
+    # Cleanup: end any active runs
+    import mlflow
+
+    try:
+        mlflow.end_run()
+    except Exception:
+        pass
+
+
+def test_basic_experiment_tracking(tracker):
     """Test basic experiment tracking functionality."""
     print("Testing basic experiment tracking...")
-
-    tracker = MLflowExperimentTracker()
 
     # Create experiment config
     config = ExperimentConfig(
@@ -55,12 +78,16 @@ def test_basic_experiment_tracking():
     runs = tracker.get_experiment_runs("test_experiment")
     print(f"Found {len(runs)} runs in test_experiment")
 
-    return True
+    assert len(runs) >= 1
 
 
-def test_convenience_functions():
+def test_convenience_functions(temp_mlflow_dir):
     """Test convenience functions for tracking."""
     print("\nTesting convenience functions...")
+
+    # Set tracking URI to temp directory
+    db_path = os.path.join(temp_mlflow_dir, "experiments.db")
+    tracking_uri = f"sqlite:///{db_path}"
 
     # Track model performance
     run_id = track_model_performance(
@@ -69,8 +96,10 @@ def test_convenience_functions():
         operation="generate",
         latency_ms=200.0,
         memory_mb=300.0,
+        tracking_uri=tracking_uri,
     )
     print(f"Tracked model performance with run ID: {run_id}")
+    assert run_id is not None
 
     # Track A/B test
     metrics_a = PerformanceMetrics(
@@ -93,17 +122,15 @@ def test_convenience_functions():
         variant_b="gpt2_medium",
         metrics_a=metrics_a,
         metrics_b=metrics_b,
+        tracking_uri=tracking_uri,
     )
     print(f"Tracked A/B test with run ID: {ab_run_id}")
+    assert ab_run_id is not None
 
-    return True
 
-
-def test_experiment_comparison():
+def test_experiment_comparison(tracker):
     """Test experiment comparison functionality."""
     print("\nTesting experiment comparison...")
-
-    tracker = MLflowExperimentTracker()
 
     # Compare experiments
     comparison = tracker.compare_experiments(
@@ -111,22 +138,4 @@ def test_experiment_comparison():
     )
     print(f"Comparison results: {len(comparison)} experiments compared")
 
-    return True
-
-
-if __name__ == "__main__":
-    print("Starting MLflow experiment tracking tests...")
-
-    try:
-        test_basic_experiment_tracking()
-        test_convenience_functions()
-        test_experiment_comparison()
-
-        print("\n✅ All tests passed! MLflow experiment tracking is working correctly.")
-
-    except (ImportError, RuntimeError) as e:
-        print(f"\n❌ Test failed: {e}")
-        import traceback
-
-        traceback.print_exc()
-        sys.exit(1)
+    assert isinstance(comparison, dict)

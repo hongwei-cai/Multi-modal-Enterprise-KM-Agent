@@ -337,6 +337,7 @@ def track_model_performance(
     operation: str,
     latency_ms: float,
     memory_mb: float,
+    tracking_uri: Optional[str] = None,
 ) -> str:
     """
     Convenience function to track model performance.
@@ -347,11 +348,12 @@ def track_model_performance(
         operation: Operation being performed (e.g., "generate", "embed")
         latency_ms: Response latency in milliseconds
         memory_mb: Memory usage in MB
+        tracking_uri: Optional MLflow tracking URI
 
     Returns:
         Run ID of the tracking run
     """
-    tracker = MLflowExperimentTracker()
+    tracker = MLflowExperimentTracker(tracking_uri=tracking_uri)
 
     config = ExperimentConfig(
         experiment_name=f"model_performance_{model_name}",
@@ -381,6 +383,7 @@ def track_ab_test(
     variant_b: str,
     metrics_a: PerformanceMetrics,
     metrics_b: PerformanceMetrics,
+    tracking_uri: Optional[str] = None,
 ) -> str:
     """
     Convenience function to track A/B test results.
@@ -391,11 +394,12 @@ def track_ab_test(
         variant_b: Name/version of variant B
         metrics_a: Performance metrics for variant A
         metrics_b: Performance metrics for variant B
+        tracking_uri: Optional MLflow tracking URI
 
     Returns:
         Run ID of the tracking run
     """
-    tracker = MLflowExperimentTracker()
+    tracker = MLflowExperimentTracker(tracking_uri=tracking_uri)
 
     # Determine winner based on response quality (if available) or latency
     if (

@@ -9,7 +9,9 @@ def test_model_versioning():
         "pathlib.Path.mkdir"
     ), patch(
         "pathlib.Path.glob", return_value=[]
-    ):  # Mock to avoid loading files
+    ), patch(  # Mock to avoid loading files
+        "src.rag.model_manager.MLflowExperimentTracker"
+    ):
         manager = ModelManager()
 
         config = ModelConfig(
@@ -26,7 +28,9 @@ def test_model_switching():
     """Test seamless model switching."""
     with patch("src.rag.model_manager.ModelManager._load_model_versions"), patch(
         "pathlib.Path.mkdir"
-    ), patch("pathlib.Path.glob", return_value=[]):
+    ), patch("pathlib.Path.glob", return_value=[]), patch(
+        "src.rag.model_manager.MLflowExperimentTracker"
+    ):
         manager = ModelManager()
 
         # Mock models
@@ -53,7 +57,9 @@ def test_ab_testing():
     """Test A/B testing framework."""
     with patch("src.rag.model_manager.ModelManager._load_model_versions"), patch(
         "pathlib.Path.mkdir"
-    ), patch("pathlib.Path.glob", return_value=[]):
+    ), patch("pathlib.Path.glob", return_value=[]), patch(
+        "src.rag.model_manager.MLflowExperimentTracker"
+    ):
         manager = ModelManager()
 
         config = ABTestConfig("test_ab", "model_a", "model_b", 0.7)
