@@ -1,6 +1,6 @@
 # Sprint 2: Model Customization and Performance Optimization - Local Transformers Edition
 
-## Story 1: Advanced Model Management with Transformers
+## Story 1: Advanced Model Management with Transformers ✅ COMPLETED
 
 **Branch Name**: `feature/advanced-transformers`
 
@@ -46,9 +46,11 @@
    - Implement experiment comparison and diffing
    - Add performance trend analysis
    - **Implementation Details**:
-     - MLflow UI accessible via `mlflow ui` command
+     - MLflow UI accessible via `mlflow ui` command (e.g., `mlflow ui --host 127.0.0.1 --port 5000`)
      - Experiment comparison through MLflow's built-in comparison tools
      - Performance metrics visualization and trend analysis
+     - SQLite backend stores experiments, runs, metrics, and parameters
+     - Web interface provides interactive dashboards for experiment analysis
 
 ## Story 3: PEFT/LoRA Fine-tuning Implementation
 
