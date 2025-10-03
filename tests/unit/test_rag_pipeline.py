@@ -52,7 +52,16 @@ def test_answer_question_no_context(mock_components):
         assert response["context_docs"] == []
 
 
-def test_get_rag_pipeline():
+@patch("src.rag.llm_client.get_model_manager")
+@patch("importlib.metadata.version")  # Patch to avoid bitsandbytes check
+def test_get_rag_pipeline(mock_version, mock_get_manager):
     """Test convenience function."""
+    mock_version.return_value = "0.41.0"  # Mock bitsandbytes version
+    mock_manager = MagicMock()
+    mock_model = MagicMock()
+    mock_tokenizer = MagicMock()
+    mock_manager.load_model.return_value = (mock_model, mock_tokenizer)
+    mock_get_manager.return_value = mock_manager
+
     pipeline = get_rag_pipeline(top_k=3)
     assert isinstance(pipeline, RAGPipeline)

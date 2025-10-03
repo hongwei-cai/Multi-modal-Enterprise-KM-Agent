@@ -7,11 +7,9 @@ import logging
 import os
 from typing import List, Optional
 
-import torch
-from sentence_transformers import SentenceTransformer
+from .model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
-os.environ["HF_HUB_TIMEOUT"] = "60"
 
 
 class EmbeddingModel:
@@ -33,9 +31,10 @@ class EmbeddingModel:
                 "EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"
             )
 
-        self.device = "mps" if torch.backends.mps.is_available() else "cpu"
+        self.model_manager = get_model_manager()
+        self.device = self.model_manager.device  # Use shared device
         logger.info("Using device: %s", self.device)
-        self.model = SentenceTransformer(model_name, device=self.device)
+        self.model = self.model_manager.load_embedding_model(model_name)
         logger.info("Loaded embedding model: %s", model_name)
 
     def encode(self, text: str) -> List[float]:

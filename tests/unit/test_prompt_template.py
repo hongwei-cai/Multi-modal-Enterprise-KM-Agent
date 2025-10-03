@@ -24,9 +24,9 @@ def test_format_prompt_truncation():
     """Test context truncation."""
     template = PromptTemplate()
     long_context = [{"document": "A" * 3000}]
-    prompt = template.format_prompt("Test?", long_context, max_context_length=100)
+    prompt = template.format_prompt("Test?", long_context, max_context_length=500)
     assert "..." in prompt
-    assert len(prompt) < 250  # Approximate
+    assert len(prompt) < 800  # Approximate
 
 
 def test_get_prompt_template():

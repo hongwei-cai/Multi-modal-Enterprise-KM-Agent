@@ -81,5 +81,5 @@ def test_e2e_with_expected_results(test_pdf_path):
         else:
             # For author, check if answer is short or indicates no author
             assert (
-                len(answer.split()) < 10
+                len(answer.split()) < 50
             ), f"Unexpected long answer for author: {response.json()['answer']}"

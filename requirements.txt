@@ -13,6 +13,7 @@ transformers>=4.35.0
 torch>=2.8.0
 torchvision>=0.23.0
 torchaudio>=2.8.0
+ollma>=0.12.3
 
 # Data Validation & API Schema
 pydantic>=2.4.2
@@ -37,3 +38,7 @@ mypy>=1.18.2
 jieba>=0.42.1
 spacy>=3.7.0
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0.tar.gz
+
+# Optional: For quantization and optimization
+optimum>=1.13.2
+accelerate>=0.24.0
