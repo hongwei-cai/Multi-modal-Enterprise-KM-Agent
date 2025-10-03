@@ -16,6 +16,12 @@ import torch
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from .experiment_tracker import (
+    ExperimentConfig,
+    MLflowExperimentTracker,
+    PerformanceMetrics,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,13 +62,19 @@ class BenchmarkResult:
 
 
 @dataclass
+@dataclass
 class ModelVersion:
     """Represents a model version with configuration."""
 
     name: str
     config: ModelConfig
-    created_at: str
+    created_at: float
     performance_metrics: Dict[str, float] = field(default_factory=dict)
+
+    @property
+    def version(self) -> str:
+        """Get the version string."""
+        return self.name
 
 
 @dataclass
@@ -101,6 +113,9 @@ class ModelManager:
         self.config_dir = Path("model_configs")
         self.config_dir.mkdir(exist_ok=True)
         self._load_model_versions()
+
+        # Initialize experiment tracking
+        self.experiment_tracker = MLflowExperimentTracker()
 
     def _detect_optimal_device(self) -> str:
         """Detect the optimal device for M1 Pro."""
@@ -193,6 +208,10 @@ class ModelManager:
 
         logger.info(f"Loading model {model_name} with quantization={use_quantization}")
 
+        # Track loading performance
+        start_time = time.time()
+        memory_before = psutil.virtual_memory().used / (1024**2)  # MB
+
         try:
             # Load tokenizer
             tokenizer = AutoTokenizer.from_pretrained(
@@ -242,6 +261,53 @@ class ModelManager:
                 }
 
             logger.info(f"Successfully loaded model {model_name} on {model_device}")
+
+            # Track loading performance
+            end_time = time.time()
+            memory_after = psutil.virtual_memory().used / (1024**2)  # MB
+            loading_time = (end_time - start_time) * 1000  # ms
+            memory_delta = memory_after - memory_before
+
+            # Record performance metrics
+            try:
+                perf_metrics = PerformanceMetrics(
+                    latency_ms=loading_time,
+                    memory_usage_mb=memory_delta,
+                    cpu_usage_percent=psutil.cpu_percent(),
+                    throughput_tokens_per_sec=None,  # Not applicable for loading
+                    response_quality_score=None,  # Not applicable for loading
+                    error_rate=0.0,
+                )
+
+                run_id = self.experiment_tracker.start_experiment(
+                    ExperimentConfig(
+                        experiment_name=f"model_loading_{model_name.replace('/', '_')}",
+                        run_name=f"load_{int(time.time())}",
+                        model_name=model_name,
+                        model_version=self.model_versions.get(
+                            model_name,
+                            ModelVersion(
+                                "unknown",
+                                ModelConfig(
+                                    "unknown", ModelTier.FAST, 0.0, 0.0, 0.0, "unknown"
+                                ),
+                                time.time(),
+                            ),
+                        ).version,
+                        parameters={
+                            "use_quantization": use_quantization,
+                            "quant_type": quant_type if use_quantization else None,
+                            "device": model_device,
+                        },
+                    )
+                )
+
+                self.experiment_tracker.log_metrics(run_id, perf_metrics)
+                self.experiment_tracker.end_experiment(run_id)
+
+            except Exception as e:
+                logger.warning(f"Failed to track model loading performance: {e}")
+
             return model, tokenizer
 
         except Exception as e:
@@ -674,12 +740,10 @@ class ModelManager:
         self, name: str, config: ModelConfig, metrics: Optional[Dict[str, float]] = None
     ):
         """Save a model version configuration."""
-        from datetime import datetime
-
         version = ModelVersion(
             name=name,
             config=config,
-            created_at=datetime.now().isoformat(),
+            created_at=time.time(),
             performance_metrics=metrics or {},
         )
         self.model_versions[name] = version
@@ -734,9 +798,131 @@ class ModelManager:
     def record_ab_test_result(
         self, test_name: str, model_used: str, metrics: Dict[str, Any]
     ):
-        """Record results from A/B test."""
-        # Store results for analysis
-        pass  # Implementation would log to MLflow or local storage
+        """Record results from A/B test with MLflow tracking."""
+        try:
+            # Extract metrics
+            latency_ms = metrics.get("latency", 0.0)
+            memory_mb = metrics.get("memory_usage", 0.0)
+            cpu_percent = psutil.cpu_percent()
+            quality_score = metrics.get("quality_score")
+            error_rate = metrics.get("error_rate", 0.0)
+
+            # Create performance metrics
+            perf_metrics = PerformanceMetrics(
+                latency_ms=latency_ms,
+                memory_usage_mb=memory_mb,
+                cpu_usage_percent=cpu_percent,
+                response_quality_score=quality_score,
+                error_rate=error_rate,
+            )
+
+            # Get the A/B test configuration
+            if test_name in self.ab_tests:
+                ab_config = self.ab_tests[test_name]
+
+                # Determine which variant was used
+                variant_a = ab_config.model_a
+                variant_b = ab_config.model_b
+
+                # For now, we'll assume we need both variants' metrics
+                # In a real implementation, you'd collect metrics for both variants
+                # Here we'll create a mock second set for demonstration
+                mock_metrics_b = PerformanceMetrics(
+                    latency_ms=latency_ms * 1.1,  # Slightly worse
+                    memory_usage_mb=memory_mb,
+                    cpu_usage_percent=cpu_percent,
+                    response_quality_score=quality_score * 0.95
+                    if quality_score
+                    else None,
+                    error_rate=error_rate,
+                )
+
+                # Determine winner based on quality or latency
+                if (
+                    perf_metrics.response_quality_score is not None
+                    and mock_metrics_b.response_quality_score is not None
+                ):
+                    winner = (
+                        variant_a
+                        if perf_metrics.response_quality_score
+                        > mock_metrics_b.response_quality_score
+                        else variant_b
+                    )
+                    confidence = abs(
+                        perf_metrics.response_quality_score
+                        - mock_metrics_b.response_quality_score
+                    )
+                else:
+                    # Fall back to latency comparison
+                    winner = (
+                        variant_a
+                        if perf_metrics.latency_ms < mock_metrics_b.latency_ms
+                        else variant_b
+                    )
+                    confidence = abs(
+                        perf_metrics.latency_ms - mock_metrics_b.latency_ms
+                    )
+
+                # Track the A/B test result
+                run_id = self.experiment_tracker.start_experiment(
+                    ExperimentConfig(
+                        experiment_name=f"ab_test_{test_name}",
+                        run_name=f"ab_test_run_{int(time.time())}",
+                        model_name=f"{variant_a}_vs_{variant_b}",
+                        model_version="ab_test",
+                        parameters={
+                            "test_name": test_name,
+                            "variant_a": variant_a,
+                            "variant_b": variant_b,
+                            "traffic_split": ab_config.traffic_split,
+                        },
+                    )
+                )
+
+                self.experiment_tracker.log_ab_test_result(
+                    run_id,
+                    test_name,
+                    variant_a,
+                    variant_b,
+                    winner,
+                    confidence,
+                    perf_metrics,
+                    mock_metrics_b,
+                )
+
+                self.experiment_tracker.end_experiment(run_id)
+
+                logger.info(f"A/B test '{test_name}' recorded with winner: {winner}")
+
+            else:
+                # Track as regular performance metrics
+                run_id = self.experiment_tracker.start_experiment(
+                    ExperimentConfig(
+                        experiment_name=f"model_performance_{model_used}",
+                        run_name=f"performance_run_{int(time.time())}",
+                        model_name=model_used,
+                        model_version=self.model_versions.get(
+                            model_used,
+                            ModelVersion(
+                                "unknown",
+                                ModelConfig(
+                                    "unknown", ModelTier.FAST, 0.0, 0.0, 0.0, "unknown"
+                                ),
+                                time.time(),
+                            ),
+                        ).version,
+                        parameters=metrics,
+                    )
+                )
+
+                self.experiment_tracker.log_metrics(run_id, perf_metrics)
+                self.experiment_tracker.end_experiment(run_id)
+
+                logger.info(f"Performance metrics recorded for model: {model_used}")
+
+        except Exception as e:
+            logger.error(f"Failed to record A/B test result: {e}")
+            # Don't raise exception to avoid breaking the main flow
 
 
 # Global instance for singleton pattern

@@ -1,0 +1,11 @@
+{
+  "metrics": {
+    "latency_ms": 0.6990432739257812,
+    "memory_usage_mb": 0.0,
+    "cpu_usage_percent": 17.8,
+    "throughput_tokens_per_sec": null,
+    "response_quality_score": null,
+    "error_rate": 0.0
+  },
+  "timestamp": "2025-10-03T13:49:32.419671"
+}

@@ -7,6 +7,11 @@ from typing import List, Optional
 
 import requests  # type: ignore
 
+from .experiment_tracker import (
+    MLflowExperimentTracker,
+    PromptResponseLog,
+    track_model_performance,
+)
 from .model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
@@ -14,7 +19,11 @@ logger = logging.getLogger(__name__)
 
 class LLMClient:
     def __init__(
-        self, model_name: Optional[str] = None, priority: Optional[str] = None
+        self,
+        model_name: Optional[str] = None,
+        priority: Optional[str] = None,
+        experiment_tracker: Optional[MLflowExperimentTracker] = None,
+        run_id: Optional[str] = None,
     ):
         if model_name is None:
             model_name = os.getenv("LLM_MODEL_NAME", "gpt2")
@@ -25,6 +34,10 @@ class LLMClient:
         # Dynamic model selection
         env_priority = os.getenv("MODEL_PRIORITY", "balanced")
         self.priority: str = priority or (env_priority if env_priority else "balanced")
+
+        # Experiment tracking
+        self.experiment_tracker = experiment_tracker
+        self.run_id = run_id
 
         if not self.is_cloud:
             self.use_quantization = (
@@ -38,7 +51,9 @@ class LLMClient:
                     self.priority
                 )
                 logger.info(
-                    f"Selected model '{selected_model}' for priority '{self.priority}'"
+                    "Selected model '%s' for priority '%s'",
+                    selected_model,
+                    self.priority,
                 )
                 self.model_name = selected_model
 
@@ -72,6 +87,14 @@ class LLMClient:
             raise ValueError("Temperature must be between 0 and 2")
         if not (0 < top_p <= 1):
             raise ValueError("Top-p must be between 0 and 1")
+
+        # Track performance
+        import time
+
+        import psutil
+
+        start_time = time.time()
+        memory_before = psutil.virtual_memory().used / (1024**2)  # MB
 
         if self.is_cloud:
             # Use vLLM API with parameters
@@ -124,6 +147,60 @@ class LLMClient:
         # Post-process response
         if "Answer:" in response:
             response = response.split("Answer:")[-1].strip()
+
+        # Log prompt and response if experiment tracking is enabled
+        if self.experiment_tracker and self.run_id:
+            try:
+                prompt_response_log = PromptResponseLog(
+                    prompt=prompt,
+                    response=response,
+                    prompt_parameters={
+                        "model_name": self.model_name,
+                        "max_length": max_length,
+                        "temperature": temperature,
+                        "top_p": top_p,
+                        "do_sample": do_sample,
+                    },
+                    response_metadata={
+                        "model_name": self.model_name,
+                        "is_cloud": self.is_cloud,
+                    },
+                )
+                self.experiment_tracker.log_prompt_response(
+                    self.run_id, prompt_response_log
+                )
+            except Exception as e:
+                logger.warning("Failed to log prompt/response: %s", e)
+
+        # Track performance metrics (only if no experiment tracker is provided)
+        if not self.experiment_tracker:
+            try:
+                end_time = time.time()
+                memory_after = psutil.virtual_memory().used / (1024**2)  # MB
+                latency_ms = (end_time - start_time) * 1000
+                memory_delta = memory_after - memory_before
+
+                # Get model version safely
+                model_version = "unknown"
+                if (
+                    hasattr(self.model_manager, "model_versions")
+                    and self.model_name in self.model_manager.model_versions
+                ):
+                    model_version = self.model_manager.model_versions[
+                        self.model_name
+                    ].version
+
+                # Track the performance
+                track_model_performance(
+                    model_name=self.model_name,
+                    model_version=model_version,
+                    operation="generate",
+                    latency_ms=latency_ms,
+                    memory_mb=memory_delta,
+                )
+            except Exception as e:
+                logger.warning("Failed to track generation performance: %s", e)
+
         return response
 
     def benchmark_current_model(
@@ -200,7 +277,7 @@ class LLMClient:
         )
 
         if optimal_model != self.model_name:
-            logger.info(f"Switching to optimal model {optimal_model} for constraints")
+            logger.info("Switching to optimal model %s for constraints", optimal_model)
             self.switch_model(optimal_model)
 
         return optimal_model
@@ -208,6 +285,14 @@ class LLMClient:
 
 # Convenience function
 def get_llm_client(
-    model_name: Optional[str] = None, priority: Optional[str] = None
+    model_name: Optional[str] = None,
+    priority: Optional[str] = None,
+    experiment_tracker: Optional[MLflowExperimentTracker] = None,
+    run_id: Optional[str] = None,
 ) -> LLMClient:
-    return LLMClient(model_name, priority)
+    return LLMClient(
+        model_name=model_name,
+        priority=priority,
+        experiment_tracker=experiment_tracker,
+        run_id=run_id,
+    )

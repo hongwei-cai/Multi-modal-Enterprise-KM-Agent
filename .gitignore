@@ -32,6 +32,9 @@ models/
 *.pth
 *.safetensors
 
+# MLflow experiment tracking
+mlruns/
+
 # Logs
 *.log
 logs/

@@ -1,0 +1,24 @@
+{
+  "test_name": "test_ab",
+  "variant_a": "model_a",
+  "variant_b": "model_b",
+  "winner": "model_a",
+  "confidence": 10.000000000000014,
+  "metrics_a": {
+    "latency_ms": 100,
+    "memory_usage_mb": 0.0,
+    "cpu_usage_percent": 19.6,
+    "throughput_tokens_per_sec": null,
+    "response_quality_score": null,
+    "error_rate": 0.0
+  },
+  "metrics_b": {
+    "latency_ms": 110.00000000000001,
+    "memory_usage_mb": 0.0,
+    "cpu_usage_percent": 19.6,
+    "throughput_tokens_per_sec": null,
+    "response_quality_score": null,
+    "error_rate": 0.0
+  },
+  "timestamp": "2025-10-03T14:19:39.431506"
+}
