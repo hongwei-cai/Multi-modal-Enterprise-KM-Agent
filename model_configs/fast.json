@@ -1,0 +1,13 @@
+{
+  "name": "fast",
+  "config": {
+    "name": "model1",
+    "tier": "fast",
+    "memory_gb": 1.0,
+    "latency_ms": 50,
+    "quality_score": 0.6,
+    "description": "Fast model"
+  },
+  "created_at": "2025-10-03T12:21:57.051061",
+  "performance_metrics": {}
+}

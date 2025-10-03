@@ -3,7 +3,7 @@ LLM inference client: Local (Transformers) or Cloud (vLLM).
 """
 import logging
 import os
-from typing import Optional
+from typing import List, Optional
 
 import requests  # type: ignore
 
@@ -137,29 +137,57 @@ class LLMClient:
             self.model_name, test_prompt, max_tokens
         )
 
-    def switch_model(self, new_model_name: str):
-        """Switch to a different model dynamically."""
-        if self.is_cloud:
-            logger.warning("Dynamic model switching not supported for cloud models")
-            return
+    def switch_model(self, model_name: str) -> bool:
+        """Switch to a different model version."""
+        manager = get_model_manager()
+        return manager.switch_model(model_name)
 
-        logger.info(f"Switching from {self.model_name} to {new_model_name}")
-        self.model_name = new_model_name
+    def get_available_models(self) -> List[str]:
+        """Get list of available model versions."""
+        manager = get_model_manager()
+        return manager.list_model_versions()
 
-        # Reload model with fallback
-        self.model, self.tokenizer = self.model_manager.load_model_with_fallback(
-            self.model_name,
-            use_quantization=self.use_quantization,
-            quant_type=self.quant_type,
+    def start_ab_test(
+        self,
+        test_name: str,
+        model_a: str,
+        model_b: str,
+        traffic_split: float = 0.5,
+    ):
+        """Start A/B testing between two models."""
+        from src.rag.model_manager import ABTestConfig
+
+        manager = get_model_manager()
+        config = ABTestConfig(
+            test_name=test_name,
+            model_a=model_a,
+            model_b=model_b,
+            traffic_split=traffic_split,
         )
+        manager.start_ab_test(config)
 
-        # Update seq2seq flag
-        from transformers import AutoConfig
+    def generate_with_ab_test(self, prompt: str, test_name: str, **kwargs) -> str:
+        """Generate response using A/B tested model."""
+        manager = get_model_manager()
+        model_name = manager.get_ab_test_model(test_name)
+        if not model_name:
+            raise ValueError(f"A/B test '{test_name}' not found")
 
-        config = AutoConfig.from_pretrained(self.model_name)
-        self.is_seq2seq = config.model_type in ["t5", "mt5", "bart", "pegasus"]
-
-        logger.info(f"Successfully switched to model {new_model_name}")
+        # Temporarily switch to test model
+        original_model = manager.current_model
+        if manager.switch_model(model_name):
+            try:
+                response = self.generate(prompt, **kwargs)
+                # Record metrics (simplified)
+                manager.record_ab_test_result(
+                    test_name, model_name, {"response_length": len(response)}
+                )
+                return response
+            finally:
+                if original_model:
+                    manager.switch_model(original_model)
+        else:
+            raise RuntimeError(f"Failed to switch to model {model_name}")
 
     def get_optimal_model_for_constraints(
         self,

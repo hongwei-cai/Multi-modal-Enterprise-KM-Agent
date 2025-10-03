@@ -3,12 +3,13 @@ Advanced Model Manager for Transformers with caching, quantization, and M1 optim
 """
 import gc
 import hashlib
+import json
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import psutil
 import torch
@@ -54,6 +55,28 @@ class BenchmarkResult:
             self.timestamp = time.time()
 
 
+@dataclass
+class ModelVersion:
+    """Represents a model version with configuration."""
+
+    name: str
+    config: ModelConfig
+    created_at: str
+    performance_metrics: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class ABTestConfig:
+    """Configuration for A/B testing."""
+
+    test_name: str
+    model_a: str
+    model_b: str
+    traffic_split: float = 0.5  # 50/50 split
+    duration_hours: int = 24
+    metrics: List[str] = field(default_factory=lambda: ["latency", "quality"])
+
+
 class ModelManager:
     """Advanced model manager with caching, memory management,\
         and device optimization."""
@@ -71,6 +94,13 @@ class ModelManager:
         self.model_configs = self._initialize_model_configs()
         self.benchmark_results: Dict[str, BenchmarkResult] = {}
         self.current_tier = ModelTier.BALANCED
+
+        self.model_versions: Dict[str, ModelVersion] = {}
+        self.current_model: Optional[str] = None
+        self.ab_tests: Dict[str, ABTestConfig] = {}
+        self.config_dir = Path("model_configs")
+        self.config_dir.mkdir(exist_ok=True)
+        self._load_model_versions()
 
     def _detect_optimal_device(self) -> str:
         """Detect the optimal device for M1 Pro."""
@@ -614,6 +644,99 @@ class ModelManager:
 
             # If all fallbacks fail, raise original error
             raise e
+
+    def _load_model_versions(self):
+        """Load saved model versions from disk."""
+        for config_file in self.config_dir.glob("*.json"):
+            with open(config_file, "r") as f:
+                data = json.load(f)
+                version = ModelVersion(**data)
+                self.model_versions[version.name] = version
+
+    def switch_model(self, model_name: str) -> bool:
+        """Seamlessly switch to a different model."""
+        if model_name not in self.model_versions:
+            return False
+
+        # Unload current model if loaded
+        if self.current_model and self.current_model in self.model_cache:
+            self.unload_model(self.current_model)
+
+        # Load new model
+        try:
+            model, tokenizer = self.load_model_with_fallback(model_name)
+            self.current_model = model_name
+            return True
+        except Exception:
+            return False
+
+    def save_model_version(
+        self, name: str, config: ModelConfig, metrics: Optional[Dict[str, float]] = None
+    ):
+        """Save a model version configuration."""
+        from datetime import datetime
+
+        version = ModelVersion(
+            name=name,
+            config=config,
+            created_at=datetime.now().isoformat(),
+            performance_metrics=metrics or {},
+        )
+        self.model_versions[name] = version
+
+        # Save to disk
+        config_path = self.config_dir / f"{name}.json"
+        with open(config_path, "w") as f:
+            json.dump(
+                {
+                    "name": version.name,
+                    "config": {
+                        "name": version.config.name,  # Changed from model_name to name
+                        "tier": version.config.tier.value,
+                        "memory_gb": version.config.memory_gb,
+                        "latency_ms": version.config.latency_ms,
+                        "quality_score": version.config.quality_score,
+                        "description": version.config.description,
+                    },
+                    "created_at": version.created_at,
+                    "performance_metrics": version.performance_metrics,
+                },
+                f,
+                indent=2,
+            )
+
+    def get_model_config(self, model_name: str) -> Optional[ModelConfig]:
+        """Get configuration for a specific model version."""
+        version = self.model_versions.get(model_name)
+        return version.config if version else None
+
+    def list_model_versions(self) -> List[str]:
+        """List all available model versions."""
+        return list(self.model_versions.keys())
+
+    def start_ab_test(self, config: ABTestConfig):
+        """Start an A/B test between two models."""
+        self.ab_tests[config.test_name] = config
+        # Initialize test tracking (could integrate with MLflow)
+
+    def get_ab_test_model(self, test_name: str) -> Optional[str]:
+        """Get the model to use for A/B testing based on traffic split."""
+        if test_name not in self.ab_tests:
+            return None
+
+        import random
+
+        config = self.ab_tests[test_name]
+        return (
+            config.model_a if random.random() < config.traffic_split else config.model_b
+        )
+
+    def record_ab_test_result(
+        self, test_name: str, model_used: str, metrics: Dict[str, Any]
+    ):
+        """Record results from A/B test."""
+        # Store results for analysis
+        pass  # Implementation would log to MLflow or local storage
 
 
 # Global instance for singleton pattern

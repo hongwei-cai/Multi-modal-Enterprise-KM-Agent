@@ -213,24 +213,23 @@ def test_llm_client_dynamic_model_selection():
 
 
 def test_llm_client_model_switching():
-    """Test dynamic model switching."""
+    """Test model switching in LLMClient."""
     with patch("src.rag.llm_client.get_model_manager") as mock_get_manager:
         mock_manager = MagicMock()
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
 
+        mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
         mock_manager.load_model_with_fallback.return_value = (
             mock_model,
             mock_tokenizer,
         )
+        mock_manager.switch_model.return_value = True
         mock_get_manager.return_value = mock_manager
 
-        client = LLMClient(model_name="microsoft/DialoGPT-medium")
-
-        # Test model switching
-        client.switch_model("microsoft/DialoGPT-large")
-        assert client.model_name == "microsoft/DialoGPT-large"
-        mock_manager.load_model_with_fallback.assert_called()
+        client = LLMClient()
+        success = client.switch_model("microsoft/DialoGPT-large")
+        assert success
 
 
 def test_llm_client_benchmarking():
@@ -280,3 +279,39 @@ def test_llm_client_optimal_model_selection():
         optimal = client.get_optimal_model_for_constraints(max_latency_ms=100)
         assert optimal == "microsoft/DialoGPT-small"
         mock_manager.get_best_model_for_constraints.assert_called_with(100, None)
+
+
+def test_llm_client_ab_testing():
+    """Test A/B testing in LLMClient."""
+    with patch("src.rag.llm_client.get_model_manager") as mock_get_manager:
+        mock_manager = MagicMock()
+        mock_model = MagicMock()
+        mock_tokenizer = MagicMock()
+
+        mock_manager.load_model_with_fallback.return_value = (
+            mock_model,
+            mock_tokenizer,
+        )
+        mock_manager.get_ab_test_model.return_value = "model_a"
+        mock_manager.switch_model.return_value = True
+        mock_manager.current_model = "original_model"
+        mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
+        mock_get_manager.return_value = mock_manager
+
+        # Mock generation
+        mock_tokenizer.decode = MagicMock(return_value="Test response")
+        mock_model.generate.return_value = [1, 2, 3]
+        mock_model.device = "cpu"
+
+        client = LLMClient()
+        client.model = mock_model
+        client.tokenizer = mock_tokenizer
+
+        # Start A/B test
+        client.start_ab_test("test_ab", "model_a", "model_b", 0.6)
+
+        # Generate with A/B test
+        response = client.generate_with_ab_test("Test prompt", "test_ab")
+        assert response == "Test response"
+        mock_manager.get_ab_test_model.assert_called_with("test_ab")
+        mock_manager.switch_model.assert_called()
