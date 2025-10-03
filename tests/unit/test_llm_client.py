@@ -184,7 +184,9 @@ def test_response_quality_basic(mock_get_manager):
 
 def test_llm_client_dynamic_model_selection():
     """Test dynamic model selection based on priority."""
-    with patch("src.rag.llm_client.get_model_manager") as mock_get_manager:
+    with patch("src.rag.llm_client.get_model_manager") as mock_get_manager, patch.dict(
+        "os.environ", {"LLM_MODEL_NAME": "gpt2"}
+    ):
         mock_manager = MagicMock()
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
@@ -199,11 +201,14 @@ def test_llm_client_dynamic_model_selection():
         mock_get_manager.return_value = mock_manager
 
         # Test with speed priority
-        # client = LLMClient(priority="speed")
+        LLMClient(priority="speed")
         mock_manager.get_model_recommendation.assert_called_with("speed")
 
+        # Reset mock for next test
+        mock_manager.reset_mock()
+
         # Test with quality priority
-        # client = LLMClient(priority="quality")
+        LLMClient(priority="quality")
         mock_manager.get_model_recommendation.assert_called_with("quality")
 
 
