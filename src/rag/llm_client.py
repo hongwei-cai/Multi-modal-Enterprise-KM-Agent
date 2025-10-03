@@ -172,33 +172,34 @@ class LLMClient:
             except Exception as e:
                 logger.warning("Failed to log prompt/response: %s", e)
 
-        # Track performance metrics
-        try:
-            end_time = time.time()
-            memory_after = psutil.virtual_memory().used / (1024**2)  # MB
-            latency_ms = (end_time - start_time) * 1000
-            memory_delta = memory_after - memory_before
+        # Track performance metrics (only if no experiment tracker is provided)
+        if not self.experiment_tracker:
+            try:
+                end_time = time.time()
+                memory_after = psutil.virtual_memory().used / (1024**2)  # MB
+                latency_ms = (end_time - start_time) * 1000
+                memory_delta = memory_after - memory_before
 
-            # Get model version safely
-            model_version = "unknown"
-            if (
-                hasattr(self.model_manager, "model_versions")
-                and self.model_name in self.model_manager.model_versions
-            ):
-                model_version = self.model_manager.model_versions[
-                    self.model_name
-                ].version
+                # Get model version safely
+                model_version = "unknown"
+                if (
+                    hasattr(self.model_manager, "model_versions")
+                    and self.model_name in self.model_manager.model_versions
+                ):
+                    model_version = self.model_manager.model_versions[
+                        self.model_name
+                    ].version
 
-            # Track the performance
-            track_model_performance(
-                model_name=self.model_name,
-                model_version=model_version,
-                operation="generate",
-                latency_ms=latency_ms,
-                memory_mb=memory_delta,
-            )
-        except Exception as e:
-            logger.warning("Failed to track generation performance: %s", e)
+                # Track the performance
+                track_model_performance(
+                    model_name=self.model_name,
+                    model_version=model_version,
+                    operation="generate",
+                    latency_ms=latency_ms,
+                    memory_mb=memory_delta,
+                )
+            except Exception as e:
+                logger.warning("Failed to track generation performance: %s", e)
 
         return response
 
