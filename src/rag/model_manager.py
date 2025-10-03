@@ -6,87 +6,25 @@ import hashlib
 import json
 import logging
 import time
-from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import psutil
 import torch
+from peft import PeftModel
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from .config import ABTestConfig, BenchmarkResult, ModelConfig, ModelTier, ModelVersion
 from .experiment_tracker import (
     ExperimentConfig,
     MLflowExperimentTracker,
     PerformanceMetrics,
 )
+from .managers import ExperimentManager, LoRAManager, QuantizationManager
+from .managers.lora_manager import LoRAConfig
 
 logger = logging.getLogger(__name__)
-
-
-class ModelTier(Enum):
-    """Model performance tiers for quality-speed tradeoffs."""
-
-    FAST = "fast"  # Small, fast models for quick responses
-    BALANCED = "balanced"  # Medium models balancing speed and quality
-    QUALITY = "quality"  # Large models for high-quality responses
-
-
-@dataclass
-class ModelConfig:
-    """Configuration for a model with performance characteristics."""
-
-    name: str
-    tier: ModelTier
-    memory_gb: float
-    latency_ms: float  # Estimated latency per token
-    quality_score: float  # Relative quality score (0-1)
-    description: str
-
-
-@dataclass
-class BenchmarkResult:
-    """Result of model performance benchmarking."""
-
-    model_name: str
-    latency_ms: float
-    memory_usage_gb: float
-    tokens_per_second: float
-    quality_score: Optional[float] = None
-    timestamp: Optional[float] = None
-
-    def __post_init__(self):
-        if self.timestamp is None:
-            self.timestamp = time.time()
-
-
-@dataclass
-@dataclass
-class ModelVersion:
-    """Represents a model version with configuration."""
-
-    name: str
-    config: ModelConfig
-    created_at: float
-    performance_metrics: Dict[str, float] = field(default_factory=dict)
-
-    @property
-    def version(self) -> str:
-        """Get the version string."""
-        return self.name
-
-
-@dataclass
-class ABTestConfig:
-    """Configuration for A/B testing."""
-
-    test_name: str
-    model_a: str
-    model_b: str
-    traffic_split: float = 0.5  # 50/50 split
-    duration_hours: int = 24
-    metrics: List[str] = field(default_factory=lambda: ["latency", "quality"])
 
 
 class ModelManager:
@@ -104,18 +42,23 @@ class ModelManager:
 
         # Dynamic model selection
         self.model_configs = self._initialize_model_configs()
-        self.benchmark_results: Dict[str, BenchmarkResult] = {}
         self.current_tier = ModelTier.BALANCED
 
         self.model_versions: Dict[str, ModelVersion] = {}
         self.current_model: Optional[str] = None
-        self.ab_tests: Dict[str, ABTestConfig] = {}
         self.config_dir = Path("model_configs")
         self.config_dir.mkdir(exist_ok=True)
         self._load_model_versions()
 
         # Initialize experiment tracking
         self.experiment_tracker = MLflowExperimentTracker()
+
+        # Initialize managers
+        self.lora_manager = LoRAManager(cache_dir=self.cache_dir, device=self.device)
+        self.quantization_manager = QuantizationManager()
+        self.experiment_manager = ExperimentManager(
+            experiment_tracker=self.experiment_tracker
+        )
 
     def _detect_optimal_device(self) -> str:
         """Detect the optimal device for M1 Pro."""
@@ -159,26 +102,7 @@ class ModelManager:
         self, model: AutoModelForCausalLM, quant_type: str = "dynamic"
     ) -> AutoModelForCausalLM:
         """Apply PyTorch quantization to the model using torch.ao.quantization."""
-        # Set quantization engine for ARM (M1)
-        torch.backends.quantized.engine = "qnnpack"
-
-        if quant_type == "dynamic":
-            # Dynamic quantization: quantize weights on-the-fly
-            model = torch.ao.quantization.quantize_dynamic(
-                model, {torch.nn.Linear}, dtype=torch.qint8
-            )
-            logger.info("Applied dynamic quantization (8-bit)")
-        elif quant_type == "static":
-            # Static quantization: requires calibration, more complex
-            model.eval()
-            model.qconfig = torch.ao.quantization.get_default_qconfig("qnnpack")
-            torch.ao.quantization.prepare(model, inplace=True)
-            # Note: In practice, you'd run calibration data here
-            torch.ao.quantization.convert(model, inplace=True)
-            logger.info("Applied static quantization")
-        else:
-            raise ValueError(f"Unsupported quantization type: {quant_type}")
-        return model
+        return self.quantization_manager.apply_pytorch_quantization(model, quant_type)
 
     def load_model(
         self,
@@ -226,14 +150,19 @@ class ModelManager:
             model_device = "cpu" if use_quantization else self.device
 
             # Load model with optimizations
-            model_kwargs = {
-                "cache_dir": str(self.cache_dir / "models"),
-                "low_cpu_mem_usage": True,
-                "torch_dtype": torch.bfloat16
-                if not use_quantization
-                else torch.float32,  # Quantization works with float32
-                "device_map": {"": model_device},  # Use CPU for quantized models
-            }
+            if use_quantization:
+                model_kwargs = {
+                    "cache_dir": str(self.cache_dir / "models"),
+                    "low_cpu_mem_usage": True,
+                    **self.quantization_manager.get_quantization_config(quant_type),
+                }
+            else:
+                model_kwargs = {
+                    "cache_dir": str(self.cache_dir / "models"),
+                    "low_cpu_mem_usage": True,
+                    "torch_dtype": torch.bfloat16,
+                    "device_map": {"": model_device},
+                }
 
             # Determine model type
             from transformers import AutoConfig
@@ -566,66 +495,12 @@ class ModelManager:
         max_tokens: int = 50,
     ) -> BenchmarkResult:
         """Benchmark a model's performance."""
-        import time
-
-        start_memory = self._check_memory_usage()
-        start_time = time.time()
-
-        try:
-            # Load model if not cached
-            model, tokenizer = self.load_model(model_name, use_quantization=True)
-
-            # Tokenize input
-            inputs = tokenizer(test_prompt, return_tensors="pt")
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-
-            # Generate response
-            with torch.no_grad():
-                outputs = model.generate(
-                    **inputs,
-                    max_new_tokens=max_tokens,
-                    do_sample=False,  # Deterministic for benchmarking
-                    pad_token_id=tokenizer.pad_token_id,
-                )
-
-            # Calculate metrics
-            end_time = time.time()
-            end_memory = self._check_memory_usage()
-
-            latency_ms = (end_time - start_time) * 1000
-            memory_usage_gb = end_memory - start_memory
-            generated_tokens = len(outputs[0]) - len(inputs["input_ids"][0])
-            tokens_per_second = (
-                generated_tokens / (end_time - start_time)
-                if (end_time - start_time) > 0
-                else 0
-            )
-
-            result = BenchmarkResult(
-                model_name=model_name,
-                latency_ms=latency_ms,
-                memory_usage_gb=memory_usage_gb,
-                tokens_per_second=tokens_per_second,
-            )
-
-            # Store benchmark result
-            self.benchmark_results[model_name] = result
-
-            logger.info(
-                f"Benchmarked {model_name}: {latency_ms:.2f}ms,\
-                    {tokens_per_second:.2f} tokens/sec"
-            )
-            return result
-
-        except Exception as e:
-            logger.error(f"Failed to benchmark {model_name}: {e}")
-            # Return a failed benchmark result
-            return BenchmarkResult(
-                model_name=model_name,
-                latency_ms=float("inf"),
-                memory_usage_gb=0,
-                tokens_per_second=0,
-            )
+        return self.experiment_manager.benchmark_model(
+            model_name=model_name,
+            test_prompt=test_prompt,
+            max_tokens=max_tokens,
+            model_loader=self.load_model,
+        )
 
     def get_model_recommendation(self, priority: str = "balanced") -> str:
         """Get model recommendation based on priority (speed/quality/balanced)."""
@@ -780,149 +655,74 @@ class ModelManager:
 
     def start_ab_test(self, config: ABTestConfig):
         """Start an A/B test between two models."""
-        self.ab_tests[config.test_name] = config
-        # Initialize test tracking (could integrate with MLflow)
+        self.experiment_manager.start_ab_test(config)
 
     def get_ab_test_model(self, test_name: str) -> Optional[str]:
         """Get the model to use for A/B testing based on traffic split."""
-        if test_name not in self.ab_tests:
-            return None
-
-        import random
-
-        config = self.ab_tests[test_name]
-        return (
-            config.model_a if random.random() < config.traffic_split else config.model_b
-        )
+        return self.experiment_manager.get_ab_test_model(test_name)
 
     def record_ab_test_result(
         self, test_name: str, model_used: str, metrics: Dict[str, Any]
     ):
         """Record results from A/B test with MLflow tracking."""
-        try:
-            # Extract metrics
-            latency_ms = metrics.get("latency", 0.0)
-            memory_mb = metrics.get("memory_usage", 0.0)
-            cpu_percent = psutil.cpu_percent()
-            quality_score = metrics.get("quality_score")
-            error_rate = metrics.get("error_rate", 0.0)
+        self.experiment_manager.record_ab_test_result(test_name, model_used, metrics)
 
-            # Create performance metrics
-            perf_metrics = PerformanceMetrics(
-                latency_ms=latency_ms,
-                memory_usage_mb=memory_mb,
-                cpu_usage_percent=cpu_percent,
-                response_quality_score=quality_score,
-                error_rate=error_rate,
-            )
+    def apply_lora_to_model(
+        self,
+        model_name: str,
+        lora_config: Optional[LoRAConfig] = None,
+        use_quantization: bool = True,
+    ) -> Tuple[PeftModel, AutoTokenizer]:
+        """Apply LoRA configuration to a model for efficient fine-tuning."""
+        # Load base model
+        base_model, tokenizer = self.load_model(
+            model_name, use_quantization=use_quantization
+        )
 
-            # Get the A/B test configuration
-            if test_name in self.ab_tests:
-                ab_config = self.ab_tests[test_name]
+        # Delegate to LoRA manager
+        return self.lora_manager.apply_lora_to_model(base_model, tokenizer, lora_config)
 
-                # Determine which variant was used
-                variant_a = ab_config.model_a
-                variant_b = ab_config.model_b
+    def save_lora_adapter(
+        self, lora_model: PeftModel, adapter_name: str, model_name: str
+    ):
+        """Save LoRA adapter weights."""
+        self.lora_manager.save_lora_adapter(lora_model, adapter_name, model_name)
 
-                # For now, we'll assume we need both variants' metrics
-                # In a real implementation, you'd collect metrics for both variants
-                # Here we'll create a mock second set for demonstration
-                mock_metrics_b = PerformanceMetrics(
-                    latency_ms=latency_ms * 1.1,  # Slightly worse
-                    memory_usage_mb=memory_mb,
-                    cpu_usage_percent=cpu_percent,
-                    response_quality_score=quality_score * 0.95
-                    if quality_score
-                    else None,
-                    error_rate=error_rate,
-                )
+    def load_lora_adapter(
+        self, model_name: str, adapter_name: str, use_quantization: bool = True
+    ) -> Tuple[PeftModel, AutoTokenizer]:
+        """Load a saved LoRA adapter onto the base model."""
+        # Load base model
+        base_model, tokenizer = self.load_model(
+            model_name, use_quantization=use_quantization
+        )
 
-                # Determine winner based on quality or latency
-                if (
-                    perf_metrics.response_quality_score is not None
-                    and mock_metrics_b.response_quality_score is not None
-                ):
-                    winner = (
-                        variant_a
-                        if perf_metrics.response_quality_score
-                        > mock_metrics_b.response_quality_score
-                        else variant_b
-                    )
-                    confidence = abs(
-                        perf_metrics.response_quality_score
-                        - mock_metrics_b.response_quality_score
-                    )
-                else:
-                    # Fall back to latency comparison
-                    winner = (
-                        variant_a
-                        if perf_metrics.latency_ms < mock_metrics_b.latency_ms
-                        else variant_b
-                    )
-                    confidence = abs(
-                        perf_metrics.latency_ms - mock_metrics_b.latency_ms
-                    )
+        # Delegate to LoRA manager
+        return self.lora_manager.load_lora_adapter(
+            base_model, tokenizer, adapter_name, model_name
+        )
 
-                # Track the A/B test result
-                run_id = self.experiment_tracker.start_experiment(
-                    ExperimentConfig(
-                        experiment_name=f"ab_test_{test_name}",
-                        run_name=f"ab_test_run_{int(time.time())}",
-                        model_name=f"{variant_a}_vs_{variant_b}",
-                        model_version="ab_test",
-                        parameters={
-                            "test_name": test_name,
-                            "variant_a": variant_a,
-                            "variant_b": variant_b,
-                            "traffic_split": ab_config.traffic_split,
-                        },
-                    )
-                )
+    def get_optimal_lora_config(self, model_name: str) -> LoRAConfig:
+        """Get optimal LoRA configuration for a specific model and M1 Pro hardware."""
+        return self.lora_manager.get_optimal_lora_config(model_name)
 
-                self.experiment_tracker.log_ab_test_result(
-                    run_id,
-                    test_name,
-                    variant_a,
-                    variant_b,
-                    winner,
-                    confidence,
-                    perf_metrics,
-                    mock_metrics_b,
-                )
+    def prepare_model_for_lora_training(
+        self, model_name: str, use_quantization: bool = True
+    ) -> Tuple[PeftModel, AutoTokenizer]:
+        """Prepare a model for LoRA training with optimal settings for M1 Pro."""
+        # Load model with quantization for memory efficiency
+        model, tokenizer = self.load_model(
+            model_name, use_quantization=use_quantization
+        )
 
-                self.experiment_tracker.end_experiment(run_id)
+        # Delegate to LoRA manager
+        return self.lora_manager.prepare_model_for_lora_training(
+            model, tokenizer, model_name, use_quantization
+        )
 
-                logger.info(f"A/B test '{test_name}' recorded with winner: {winner}")
-
-            else:
-                # Track as regular performance metrics
-                run_id = self.experiment_tracker.start_experiment(
-                    ExperimentConfig(
-                        experiment_name=f"model_performance_{model_used}",
-                        run_name=f"performance_run_{int(time.time())}",
-                        model_name=model_used,
-                        model_version=self.model_versions.get(
-                            model_used,
-                            ModelVersion(
-                                "unknown",
-                                ModelConfig(
-                                    "unknown", ModelTier.FAST, 0.0, 0.0, 0.0, "unknown"
-                                ),
-                                time.time(),
-                            ),
-                        ).version,
-                        parameters=metrics,
-                    )
-                )
-
-                self.experiment_tracker.log_metrics(run_id, perf_metrics)
-                self.experiment_tracker.end_experiment(run_id)
-
-                logger.info(f"Performance metrics recorded for model: {model_used}")
-
-        except Exception as e:
-            logger.error(f"Failed to record A/B test result: {e}")
-            # Don't raise exception to avoid breaking the main flow
+    def list_lora_adapters(self, model_name: Optional[str] = None) -> dict:
+        """List all available LoRA adapters."""
+        return self.lora_manager.list_available_adapters(model_name)
 
 
 # Global instance for singleton pattern

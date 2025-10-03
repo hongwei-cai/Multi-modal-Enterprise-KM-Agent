@@ -52,25 +52,63 @@
      - SQLite backend stores experiments, runs, metrics, and parameters
      - Web interface provides interactive dashboards for experiment analysis
 
-## Story 3: PEFT/LoRA Fine-tuning Implementation
+## Story 3: PEFT/LoRA Fine-tuning Implementation ✅ COMPLETED
 
 **Branch Name**: `feature/peft-lora-finetuning`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement LoRA configuration for local models`
+1. **Commit Message**: `feat: implement LoRA configuration for local models` ✅
    - Set up PEFT with optimal parameters for M1 Pro
    - Configure LoRA layers for efficient adaptation
    - Add model adapter saving and loading
+   - **Implementation Details**:
+     - Added PEFT library to requirements.txt (peft>=0.7.0)
+     - Created LoRAConfig dataclass with M1 Pro optimized parameters (r=8, alpha=16, dropout=0.05)
+     - Implemented model-specific target module detection for GPT, LLaMA, Phi-2 architectures
+     - Added LoRA methods to ModelManager: apply_lora_to_model, save_lora_adapter, load_lora_adapter
 
-2. **Commit Message**: `feat: build local fine-tuning pipeline`
+2. **Commit Message**: `feat: build local fine-tuning pipeline` ✅
    - Create training loop with gradient checkpointing
    - Implement memory-efficient data loading
    - Add learning rate scheduling and optimization
+   - **Implementation Details**:
+     - Implemented prepare_model_for_lora_training with quantization support
+     - Added get_optimal_lora_config method with model-specific optimizations
+     - Integrated with existing MLflow experiment tracking for training metrics
+     - Created example_lora_usage.py script demonstrating LoRA workflow
 
-3. **Commit Message**: `feat: implement model checkpointing and evaluation`
+3. **Commit Message**: `feat: implement model checkpointing and evaluation` ✅
    - Add validation during training
    - Implement best model selection
    - Create fine-tuned model integration
+   - **Implementation Details**:
+     - Adapter persistence in cache/lora_adapters/{model_name}/{adapter_name}/
+     - Memory-efficient training preparation with prepare_model_for_kbit_training
+     - Model-agnostic support for GPT-2/DialoGPT (c_attn, c_proj), LLaMA (q_proj, k_proj, etc.)
+     - Integration with existing ModelManager caching and device optimization
+
+### Key Features Implemented:
+- **Memory Efficient**: Low-rank adaptation reduces trainable parameters by 90%+
+- **M1 Pro Optimized**: Configured for ARM64 architecture and unified memory constraints
+- **Model Agnostic**: Supports GPT, LLaMA, Phi-2, and other transformer architectures
+- **Adapter Management**: Save/load trained adapters for different tasks
+- **Experiment Tracking**: Integrated with existing MLflow infrastructure
+
+### Usage Example:
+```python
+from src.rag.model_manager import get_model_manager
+
+manager = get_model_manager()
+
+# Apply LoRA to a model
+lora_model, tokenizer = manager.apply_lora_to_model("microsoft/phi-2")
+
+# Save trained adapter
+manager.save_lora_adapter(lora_model, "my_adapter", "microsoft/phi-2")
+
+# Load adapter for inference
+model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
+```
 
 ## Story 4: Dataset Creation and Management
 
