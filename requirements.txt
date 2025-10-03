@@ -41,3 +41,4 @@ en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_
 # Optional: For quantization and optimization
 optimum>=1.13.2
 accelerate>=0.24.0
+psutil>=5.9.0

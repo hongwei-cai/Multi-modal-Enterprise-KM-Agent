@@ -4,6 +4,9 @@ Advanced Model Manager for Transformers with caching, quantization, and M1 optim
 import gc
 import hashlib
 import logging
+import time
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -13,6 +16,42 @@ from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 logger = logging.getLogger(__name__)
+
+
+class ModelTier(Enum):
+    """Model performance tiers for quality-speed tradeoffs."""
+
+    FAST = "fast"  # Small, fast models for quick responses
+    BALANCED = "balanced"  # Medium models balancing speed and quality
+    QUALITY = "quality"  # Large models for high-quality responses
+
+
+@dataclass
+class ModelConfig:
+    """Configuration for a model with performance characteristics."""
+
+    name: str
+    tier: ModelTier
+    memory_gb: float
+    latency_ms: float  # Estimated latency per token
+    quality_score: float  # Relative quality score (0-1)
+    description: str
+
+
+@dataclass
+class BenchmarkResult:
+    """Result of model performance benchmarking."""
+
+    model_name: str
+    latency_ms: float
+    memory_usage_gb: float
+    tokens_per_second: float
+    quality_score: Optional[float] = None
+    timestamp: Optional[float] = None
+
+    def __post_init__(self):
+        if self.timestamp is None:
+            self.timestamp = time.time()
 
 
 class ModelManager:
@@ -27,6 +66,11 @@ class ModelManager:
         self.model_cache: Dict[str, Dict[str, Any]] = {}
         self.memory_threshold_gb = 12.0  # Leave 4GB for system on 16GB M1 Pro
         self.device = self._detect_optimal_device()
+
+        # Dynamic model selection
+        self.model_configs = self._initialize_model_configs()
+        self.benchmark_results: Dict[str, BenchmarkResult] = {}
+        self.current_tier = ModelTier.BALANCED
 
     def _detect_optimal_device(self) -> str:
         """Detect the optimal device for M1 Pro."""
@@ -282,6 +326,294 @@ class ModelManager:
                 f"Failed to import jieba: {e}. Install with 'pip install jieba'"
             )
             raise
+
+    def _initialize_model_configs(self) -> Dict[str, ModelConfig]:
+        """Initialize model configurations with quality-speed tradeoffs."""
+        return {
+            "google/flan-t5-small": ModelConfig(
+                name="google/flan-t5-small",
+                tier=ModelTier.FAST,
+                memory_gb=1.2,
+                latency_ms=60,
+                quality_score=0.7,
+                description="Fast T5 model optimized for QA tasks",
+            ),
+            "google/flan-t5-base": ModelConfig(
+                name="google/flan-t5-base",
+                tier=ModelTier.BALANCED,
+                memory_gb=2.5,
+                latency_ms=100,
+                quality_score=0.85,
+                description="Balanced T5 model with good QA performance",
+            ),
+            "microsoft/DialoGPT-small": ModelConfig(
+                name="microsoft/DialoGPT-small",
+                tier=ModelTier.FAST,
+                memory_gb=1.0,
+                latency_ms=50,
+                quality_score=0.6,
+                description="Small, fast conversational model",
+            ),
+            "microsoft/DialoGPT-medium": ModelConfig(
+                name="microsoft/DialoGPT-medium",
+                tier=ModelTier.BALANCED,
+                memory_gb=2.0,
+                latency_ms=80,
+                quality_score=0.8,
+                description="Balanced conversational model",
+            ),
+            "microsoft/DialoGPT-large": ModelConfig(
+                name="microsoft/DialoGPT-large",
+                tier=ModelTier.QUALITY,
+                memory_gb=4.0,
+                latency_ms=120,
+                quality_score=0.9,
+                description="Large conversational model",
+            ),
+            "microsoft/phi-2": ModelConfig(
+                name="microsoft/phi-2",
+                tier=ModelTier.QUALITY,
+                memory_gb=5.0,
+                latency_ms=150,
+                quality_score=0.95,
+                description="High-performance general-purpose model",
+            ),
+        }
+
+    def select_model_for_tier(self, tier: ModelTier) -> str:
+        """Select the best model for a given performance tier."""
+        tier_models = [
+            config for config in self.model_configs.values() if config.tier == tier
+        ]
+        if not tier_models:
+            # Fallback to any available model
+            return list(self.model_configs.keys())[0]
+
+        # Select model with best quality for the tier
+        return max(tier_models, key=lambda x: x.quality_score).name
+
+    def get_optimal_model(
+        self, max_memory_gb: Optional[float] = None, min_quality: Optional[float] = None
+    ) -> str:
+        """Get the optimal model based on constraints."""
+        if max_memory_gb is None:
+            max_memory_gb = self.memory_threshold_gb
+
+        available_models = [
+            config
+            for config in self.model_configs.values()
+            if config.memory_gb <= max_memory_gb
+        ]
+
+        if not available_models:
+            # Return smallest model if none fit
+            return min(self.model_configs.values(), key=lambda x: x.memory_gb).name
+
+        if min_quality is not None:
+            quality_models = [
+                m for m in available_models if m.quality_score >= min_quality
+            ]
+            if quality_models:
+                available_models = quality_models
+
+        # Return model with best quality that fits constraints
+        return max(available_models, key=lambda x: x.quality_score).name
+
+    def should_downgrade_model(self, current_model: str) -> bool:
+        """Check if we should downgrade to a smaller model due to memory pressure."""
+        current_memory = self._check_memory_usage()
+        memory_pressure = (
+            current_memory > self.memory_threshold_gb * 0.8
+        )  # 80% threshold
+
+        if not memory_pressure:
+            return False
+
+        if current_model not in self.model_configs:
+            return False
+
+        current_config = self.model_configs[current_model]
+
+        # Check if there's a smaller model available
+        smaller_models = [
+            config
+            for config in self.model_configs.values()
+            if config.memory_gb < current_config.memory_gb
+        ]
+
+        return len(smaller_models) > 0
+
+    def get_downgrade_model(self, current_model: str) -> Optional[str]:
+        """Get the best downgrade model for memory pressure."""
+        if current_model not in self.model_configs:
+            return None
+
+        current_config = self.model_configs[current_model]
+
+        # Find smaller models
+        smaller_models = [
+            config
+            for config in self.model_configs.values()
+            if config.memory_gb < current_config.memory_gb
+        ]
+
+        if not smaller_models:
+            return None
+
+        # Return the largest of the smaller models (best quality downgrade)
+        return max(smaller_models, key=lambda x: x.quality_score).name
+
+    def benchmark_model(
+        self,
+        model_name: str,
+        test_prompt: str = "Hello, how are you?",
+        max_tokens: int = 50,
+    ) -> BenchmarkResult:
+        """Benchmark a model's performance."""
+        import time
+
+        start_memory = self._check_memory_usage()
+        start_time = time.time()
+
+        try:
+            # Load model if not cached
+            model, tokenizer = self.load_model(model_name, use_quantization=True)
+
+            # Tokenize input
+            inputs = tokenizer(test_prompt, return_tensors="pt")
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+            # Generate response
+            with torch.no_grad():
+                outputs = model.generate(
+                    **inputs,
+                    max_new_tokens=max_tokens,
+                    do_sample=False,  # Deterministic for benchmarking
+                    pad_token_id=tokenizer.pad_token_id,
+                )
+
+            # Calculate metrics
+            end_time = time.time()
+            end_memory = self._check_memory_usage()
+
+            latency_ms = (end_time - start_time) * 1000
+            memory_usage_gb = end_memory - start_memory
+            generated_tokens = len(outputs[0]) - len(inputs["input_ids"][0])
+            tokens_per_second = (
+                generated_tokens / (end_time - start_time)
+                if (end_time - start_time) > 0
+                else 0
+            )
+
+            result = BenchmarkResult(
+                model_name=model_name,
+                latency_ms=latency_ms,
+                memory_usage_gb=memory_usage_gb,
+                tokens_per_second=tokens_per_second,
+            )
+
+            # Store benchmark result
+            self.benchmark_results[model_name] = result
+
+            logger.info(
+                f"Benchmarked {model_name}: {latency_ms:.2f}ms,\
+                    {tokens_per_second:.2f} tokens/sec"
+            )
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to benchmark {model_name}: {e}")
+            # Return a failed benchmark result
+            return BenchmarkResult(
+                model_name=model_name,
+                latency_ms=float("inf"),
+                memory_usage_gb=0,
+                tokens_per_second=0,
+            )
+
+    def get_model_recommendation(self, priority: str = "balanced") -> str:
+        """Get model recommendation based on priority (speed/quality/balanced)."""
+        if priority == "speed":
+            return self.select_model_for_tier(ModelTier.FAST)
+        elif priority == "quality":
+            return self.select_model_for_tier(ModelTier.QUALITY)
+        else:  # balanced
+            return self.select_model_for_tier(ModelTier.BALANCED)
+
+    def get_best_model_for_constraints(
+        self,
+        max_latency_ms: Optional[float] = None,
+        max_memory_gb: Optional[float] = None,
+    ) -> str:
+        """Get the best model that meets the given constraints."""
+        candidates = list(self.model_configs.values())
+
+        if max_latency_ms is not None:
+            candidates = [c for c in candidates if c.latency_ms <= max_latency_ms]
+
+        if max_memory_gb is not None:
+            candidates = [c for c in candidates if c.memory_gb <= max_memory_gb]
+
+        if not candidates:
+            # Return smallest model as fallback
+            return min(self.model_configs.values(), key=lambda x: x.memory_gb).name
+
+        # Return highest quality model that meets constraints
+        return max(candidates, key=lambda x: x.quality_score).name
+
+    def load_model_with_fallback(
+        self,
+        model_name: str,
+        use_quantization: bool = True,
+        quant_type: str = "dynamic",
+    ) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
+        """Load model with automatic fallback to smaller\
+            models under memory pressure."""
+        original_model = model_name
+
+        # Check if we should downgrade
+        if self.should_downgrade_model(model_name):
+            downgrade_model = self.get_downgrade_model(model_name)
+            if downgrade_model:
+                logger.warning(
+                    f"Memory pressure detected. Downgrading\
+                        from {model_name} to {downgrade_model}"
+                )
+                model_name = downgrade_model
+                self.current_tier = self.model_configs[model_name].tier
+
+        try:
+            return self.load_model(model_name, use_quantization, quant_type)
+        except Exception as e:
+            # If loading fails, try progressively smaller models
+            logger.error(f"Failed to load {model_name}: {e}")
+
+            available_models = sorted(
+                self.model_configs.values(), key=lambda x: x.memory_gb
+            )
+
+            for config in available_models:
+                # Get current model config or create a dummy one with infinite memory
+                current_config = self.model_configs.get(original_model)
+                if current_config is None:
+                    current_memory_gb = float("inf")
+                else:
+                    current_memory_gb = current_config.memory_gb
+
+                if config.memory_gb < current_memory_gb:
+                    try:
+                        logger.info(f"Trying fallback model: {config.name}")
+                        return self.load_model(
+                            config.name, use_quantization, quant_type
+                        )
+                    except Exception as fallback_e:
+                        logger.error(
+                            f"Fallback model {config.name} also failed: {fallback_e}"
+                        )
+                        continue
+
+            # If all fallbacks fail, raise original error
+            raise e
 
 
 # Global instance for singleton pattern

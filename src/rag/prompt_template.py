@@ -18,7 +18,8 @@ class PromptTemplate:
     ):
         self.system_role = system_role
         if template is None:
-            template = "Question: {question}\n\n" "Context: {context}\n\n" "Answer:"
+            template = "Answer the question based on the context.\
+                \n\nQuestion: {question}\n\nContext: {context}"
         self.template = template
 
     def format_prompt(

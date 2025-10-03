@@ -23,6 +23,13 @@ def test_pdf_path():
     return path
 
 
+@pytest.fixture(autouse=True)
+def set_test_model(monkeypatch):
+    """Set a consistent model for integration tests."""
+    monkeypatch.setenv("LLM_MODEL_NAME", "google/flan-t5-small")
+    monkeypatch.setenv("MODEL_PRIORITY", "balanced")
+
+
 def test_full_flow_upload_and_ask(test_pdf_path):
     # Upload
     with open(test_pdf_path, "rb") as f:
@@ -56,15 +63,15 @@ def test_e2e_with_expected_results(test_pdf_path):
     test_cases = [
         {
             "question": "What is this document about?",
-            "expected_contains": ["ai", "intelligence"],  # Broader checks
+            "expected_contains": ["ai", "intelligence", "artificial"],
         },
         {
             "question": "What does the document contain?",
-            "expected_contains": ["definition", "ai"],
+            "expected_contains": ["ai", "data", "science", "intelligence"],
         },
         {
             "question": "Who is the author of the document?",
-            "expected_contains": [],  # Expect no specific content
+            "expected_contains": [],
         },
     ]
 

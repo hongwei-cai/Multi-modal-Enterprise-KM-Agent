@@ -10,23 +10,39 @@ import requests  # type: ignore
 from .model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
-# os.environ["HF_HUB_TIMEOUT"] = "60"
 
 
 class LLMClient:
-    def __init__(self, model_name: Optional[str] = None):
+    def __init__(
+        self, model_name: Optional[str] = None, priority: Optional[str] = None
+    ):
         if model_name is None:
             model_name = os.getenv("LLM_MODEL_NAME", "gpt2")
         self.model_name = model_name
         self.is_cloud = bool(os.getenv("CLOUD_ENV"))
         self.model_manager = get_model_manager()
 
+        # Dynamic model selection
+        env_priority = os.getenv("MODEL_PRIORITY", "balanced")
+        self.priority: str = priority or (env_priority if env_priority else "balanced")
+
         if not self.is_cloud:
             self.use_quantization = (
                 os.getenv("USE_QUANTIZATION", "false").lower() == "true"
             )  # Default to False for better generation on M1
             self.quant_type = os.getenv("QUANT_TYPE", "dynamic")
-            self.model, self.tokenizer = self.model_manager.load_model(
+
+            # Use dynamic model selection if no specific model requested
+            if model_name == os.getenv("LLM_MODEL_NAME", "gpt2"):  # Default model
+                selected_model = self.model_manager.get_model_recommendation(
+                    self.priority
+                )
+                logger.info(
+                    f"Selected model '{selected_model}' for priority '{self.priority}'"
+                )
+                self.model_name = selected_model
+
+            self.model, self.tokenizer = self.model_manager.load_model_with_fallback(
                 self.model_name,
                 use_quantization=self.use_quantization,
                 quant_type=self.quant_type,
@@ -110,7 +126,60 @@ class LLMClient:
             response = response.split("Answer:")[-1].strip()
         return response
 
+    def benchmark_current_model(
+        self, test_prompt: str = "Hello, how are you?", max_tokens: int = 50
+    ):
+        """Benchmark the current model's performance."""
+        if self.is_cloud:
+            logger.warning("Benchmarking not supported for cloud models")
+            return None
+        return self.model_manager.benchmark_model(
+            self.model_name, test_prompt, max_tokens
+        )
+
+    def switch_model(self, new_model_name: str):
+        """Switch to a different model dynamically."""
+        if self.is_cloud:
+            logger.warning("Dynamic model switching not supported for cloud models")
+            return
+
+        logger.info(f"Switching from {self.model_name} to {new_model_name}")
+        self.model_name = new_model_name
+
+        # Reload model with fallback
+        self.model, self.tokenizer = self.model_manager.load_model_with_fallback(
+            self.model_name,
+            use_quantization=self.use_quantization,
+            quant_type=self.quant_type,
+        )
+
+        # Update seq2seq flag
+        from transformers import AutoConfig
+
+        config = AutoConfig.from_pretrained(self.model_name)
+        self.is_seq2seq = config.model_type in ["t5", "mt5", "bart", "pegasus"]
+
+        logger.info(f"Successfully switched to model {new_model_name}")
+
+    def get_optimal_model_for_constraints(
+        self,
+        max_latency_ms: Optional[float] = None,
+        max_memory_gb: Optional[float] = None,
+    ):
+        """Get the optimal model for given constraints and switch to it."""
+        optimal_model = self.model_manager.get_best_model_for_constraints(
+            max_latency_ms, max_memory_gb
+        )
+
+        if optimal_model != self.model_name:
+            logger.info(f"Switching to optimal model {optimal_model} for constraints")
+            self.switch_model(optimal_model)
+
+        return optimal_model
+
 
 # Convenience function
-def get_llm_client(model_name: Optional[str] = None) -> LLMClient:
-    return LLMClient(model_name)
+def get_llm_client(
+    model_name: Optional[str] = None, priority: Optional[str] = None
+) -> LLMClient:
+    return LLMClient(model_name, priority)

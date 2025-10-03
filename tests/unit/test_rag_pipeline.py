@@ -60,7 +60,8 @@ def test_get_rag_pipeline(mock_version, mock_get_manager):
     mock_manager = MagicMock()
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
-    mock_manager.load_model.return_value = (mock_model, mock_tokenizer)
+    mock_manager.load_model_with_fallback.return_value = (mock_model, mock_tokenizer)
+    mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
     mock_get_manager.return_value = mock_manager
 
     pipeline = get_rag_pipeline(top_k=3)
