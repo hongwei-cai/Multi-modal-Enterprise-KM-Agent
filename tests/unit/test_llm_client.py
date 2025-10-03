@@ -7,7 +7,9 @@ from src.rag.llm_client import LLMClient, get_llm_client
 
 def test_llm_client_init_local():
     """Test local initialization with model_manager."""
-    with patch("src.rag.llm_client.get_model_manager") as mock_get_manager:
+    with patch("src.rag.llm_client.get_model_manager") as mock_get_manager, patch.dict(
+        "os.environ", {"USE_QUANTIZATION": "false", "QUANT_TYPE": "dynamic"}
+    ):
         mock_manager = MagicMock()
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()

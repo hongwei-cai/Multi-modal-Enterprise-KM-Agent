@@ -7,7 +7,11 @@ from typing import List, Optional
 
 import requests  # type: ignore
 
-from .experiment_tracker import track_model_performance
+from .experiment_tracker import (
+    MLflowExperimentTracker,
+    PromptResponseLog,
+    track_model_performance,
+)
 from .model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
@@ -15,7 +19,11 @@ logger = logging.getLogger(__name__)
 
 class LLMClient:
     def __init__(
-        self, model_name: Optional[str] = None, priority: Optional[str] = None
+        self,
+        model_name: Optional[str] = None,
+        priority: Optional[str] = None,
+        experiment_tracker: Optional[MLflowExperimentTracker] = None,
+        run_id: Optional[str] = None,
     ):
         if model_name is None:
             model_name = os.getenv("LLM_MODEL_NAME", "gpt2")
@@ -26,6 +34,10 @@ class LLMClient:
         # Dynamic model selection
         env_priority = os.getenv("MODEL_PRIORITY", "balanced")
         self.priority: str = priority or (env_priority if env_priority else "balanced")
+
+        # Experiment tracking
+        self.experiment_tracker = experiment_tracker
+        self.run_id = run_id
 
         if not self.is_cloud:
             self.use_quantization = (
@@ -39,7 +51,9 @@ class LLMClient:
                     self.priority
                 )
                 logger.info(
-                    f"Selected model '{selected_model}' for priority '{self.priority}'"
+                    "Selected model '%s' for priority '%s'",
+                    selected_model,
+                    self.priority,
                 )
                 self.model_name = selected_model
 
@@ -133,6 +147,30 @@ class LLMClient:
         # Post-process response
         if "Answer:" in response:
             response = response.split("Answer:")[-1].strip()
+
+        # Log prompt and response if experiment tracking is enabled
+        if self.experiment_tracker and self.run_id:
+            try:
+                prompt_response_log = PromptResponseLog(
+                    prompt=prompt,
+                    response=response,
+                    prompt_parameters={
+                        "model_name": self.model_name,
+                        "max_length": max_length,
+                        "temperature": temperature,
+                        "top_p": top_p,
+                        "do_sample": do_sample,
+                    },
+                    response_metadata={
+                        "model_name": self.model_name,
+                        "is_cloud": self.is_cloud,
+                    },
+                )
+                self.experiment_tracker.log_prompt_response(
+                    self.run_id, prompt_response_log
+                )
+            except Exception as e:
+                logger.warning("Failed to log prompt/response: %s", e)
 
         # Track performance metrics
         try:
@@ -238,7 +276,7 @@ class LLMClient:
         )
 
         if optimal_model != self.model_name:
-            logger.info(f"Switching to optimal model {optimal_model} for constraints")
+            logger.info("Switching to optimal model %s for constraints", optimal_model)
             self.switch_model(optimal_model)
 
         return optimal_model
@@ -246,6 +284,14 @@ class LLMClient:
 
 # Convenience function
 def get_llm_client(
-    model_name: Optional[str] = None, priority: Optional[str] = None
+    model_name: Optional[str] = None,
+    priority: Optional[str] = None,
+    experiment_tracker: Optional[MLflowExperimentTracker] = None,
+    run_id: Optional[str] = None,
 ) -> LLMClient:
-    return LLMClient(model_name, priority)
+    return LLMClient(
+        model_name=model_name,
+        priority=priority,
+        experiment_tracker=experiment_tracker,
+        run_id=run_id,
+    )

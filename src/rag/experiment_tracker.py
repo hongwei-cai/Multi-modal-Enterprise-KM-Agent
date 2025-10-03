@@ -45,6 +45,81 @@ class PerformanceMetrics:
     error_rate: float = 0.0
 
 
+@dataclass
+class PromptResponseLog:
+    """Log entry for prompt and response data."""
+
+    prompt: str
+    response: str
+    prompt_template: Optional[str] = None
+    prompt_parameters: Optional[Dict[str, Any]] = None
+    response_metadata: Optional[Dict[str, Any]] = None
+    timestamp: Optional[str] = None
+
+    def __post_init__(self):
+        if self.timestamp is None:
+            self.timestamp = datetime.now().isoformat()
+        if self.prompt_parameters is None:
+            self.prompt_parameters = {}
+        if self.response_metadata is None:
+            self.response_metadata = {}
+
+
+@dataclass
+class RetrievalMetrics:
+    """Metrics for retrieval performance and accuracy."""
+
+    query: str
+    retrieved_docs_count: int
+    relevant_docs_count: Optional[int] = None
+    retrieval_precision: Optional[float] = None
+    retrieval_recall: Optional[float] = None
+    retrieval_f1_score: Optional[float] = None
+    average_relevance_score: Optional[float] = None
+    retrieval_latency_ms: float = 0.0
+    context_relevance_score: Optional[float] = None
+
+    def calculate_metrics(self, relevant_doc_ids: Optional[List[str]] = None):
+        """Calculate precision, recall, and F1 scores if relevant docs provided."""
+        if relevant_doc_ids is not None and self.retrieved_docs_count > 0:
+            self.relevant_docs_count = len(relevant_doc_ids)
+            # For now, assume all retrieved docs are relevant for basic metrics
+            # In a real implementation, you'd have ground truth relevance
+            self.retrieval_precision = min(
+                1.0, self.relevant_docs_count / self.retrieved_docs_count
+            )
+            self.retrieval_recall = self.retrieval_precision  # Simplified
+            if self.retrieval_precision + self.retrieval_recall > 0:
+                self.retrieval_f1_score = (
+                    2
+                    * (self.retrieval_precision * self.retrieval_recall)
+                    / (self.retrieval_precision + self.retrieval_recall)
+                )
+
+
+@dataclass
+class SystemResourceMetrics:
+    """Comprehensive system resource monitoring."""
+
+    cpu_percent: float
+    memory_percent: float
+    memory_used_mb: float
+    memory_available_mb: float
+    disk_usage_percent: float
+    disk_used_gb: float
+    disk_free_gb: float
+    network_bytes_sent: int
+    network_bytes_recv: int
+    gpu_memory_used_mb: Optional[float] = None
+    gpu_memory_percent: Optional[float] = None
+    gpu_utilization_percent: Optional[float] = None
+    timestamp: Optional[str] = None
+
+    def __post_init__(self):
+        if self.timestamp is None:
+            self.timestamp = datetime.now().isoformat()
+
+
 class MLflowExperimentTracker:
     """
     MLflow-based experiment tracking system with SQLite backend.
@@ -188,6 +263,156 @@ class MLflowExperimentTracker:
         # Log as artifact
         artifact_path = f"ab_test_results/{test_name}.json"
         self._log_json_artifact(run_id, ab_test_data, artifact_path)
+
+    def log_prompt_response(
+        self, run_id: str, prompt_log: PromptResponseLog, step: int = 0
+    ):
+        """
+        Log prompt and response data for an experiment run.
+
+        Args:
+            run_id: Experiment run ID
+            prompt_log: Prompt and response data to log
+            step: Step number for sequential logging
+        """
+        if run_id not in self.active_runs:
+            raise ValueError(f"Run ID {run_id} not found in active runs")
+
+        # Log key metrics
+        mlflow.log_param(f"prompt_length_step_{step}", len(prompt_log.prompt))
+        mlflow.log_param(f"response_length_step_{step}", len(prompt_log.response))
+
+        if prompt_log.response_metadata:
+            for key, value in prompt_log.response_metadata.items():
+                if isinstance(value, (int, float)):
+                    mlflow.log_metric(f"{key}_step_{step}", value, step=step)
+
+        # Log as JSON artifact
+        self._log_json_artifact(
+            run_id, asdict(prompt_log), f"prompt_response_step_{step}.json"
+        )
+
+    def log_retrieval_metrics(
+        self, run_id: str, retrieval_metrics: RetrievalMetrics, step: int = 0
+    ):
+        """
+        Log retrieval performance metrics for an experiment run.
+
+        Args:
+            run_id: Experiment run ID
+            retrieval_metrics: Retrieval metrics to log
+            step: Step number for sequential logging
+        """
+        if run_id not in self.active_runs:
+            raise ValueError(f"Run ID {run_id} not found in active runs")
+
+        # Calculate metrics if not already calculated
+        if retrieval_metrics.retrieval_precision is None:
+            retrieval_metrics.calculate_metrics()
+
+        # Log metrics
+        metrics_dict = {
+            k: v
+            for k, v in asdict(retrieval_metrics).items()
+            if v is not None and isinstance(v, (int, float))
+        }
+        for key, value in metrics_dict.items():
+            mlflow.log_metric(f"retrieval_{key}", value, step=step)
+
+        # Log query and counts as parameters
+        mlflow.log_param(
+            f"retrieval_query_step_{step}", retrieval_metrics.query[:100]
+        )  # Truncate long queries
+        mlflow.log_param(
+            f"retrieval_docs_count_step_{step}", retrieval_metrics.retrieved_docs_count
+        )
+
+        # Log as JSON artifact
+        self._log_json_artifact(
+            run_id, asdict(retrieval_metrics), f"retrieval_metrics_step_{step}.json"
+        )
+
+    def log_system_resources(
+        self, run_id: str, resource_metrics: SystemResourceMetrics, step: int = 0
+    ):
+        """
+        Log comprehensive system resource metrics for an experiment run.
+
+        Args:
+            run_id: Experiment run ID
+            resource_metrics: System resource metrics to log
+            step: Step number for sequential logging
+        """
+        if run_id not in self.active_runs:
+            raise ValueError(f"Run ID {run_id} not found in active runs")
+
+        # Log all numeric metrics
+        metrics_dict = {
+            k: v
+            for k, v in asdict(resource_metrics).items()
+            if v is not None and isinstance(v, (int, float))
+        }
+        for key, value in metrics_dict.items():
+            mlflow.log_metric(f"system_{key}", value, step=step)
+
+        # Log as JSON artifact periodically (every 10 steps to avoid too many files)
+        if step % 10 == 0:
+            self._log_json_artifact(
+                run_id, asdict(resource_metrics), f"system_resources_step_{step}.json"
+            )
+
+    def get_current_system_resources(self) -> SystemResourceMetrics:
+        """
+        Get current system resource metrics.
+
+        Returns:
+            Current system resource metrics
+        """
+
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage("/")
+
+        # Network I/O
+        net_io = psutil.net_io_counters()
+        bytes_sent = net_io.bytes_sent
+        bytes_recv = net_io.bytes_recv
+
+        # GPU metrics (if available)
+        gpu_memory_used = None
+        gpu_memory_percent = None
+        gpu_utilization = None
+
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                gpu_memory_used = torch.cuda.memory_allocated() / (1024**2)  # MB
+                gpu_memory_percent = (
+                    gpu_memory_used / torch.cuda.get_device_properties(0).total_memory
+                ) * 100
+                gpu_utilization = (
+                    torch.cuda.utilization(0)
+                    if hasattr(torch.cuda, "utilization")
+                    else None
+                )
+        except ImportError:
+            pass
+
+        return SystemResourceMetrics(
+            cpu_percent=cpu_percent,
+            memory_percent=memory.percent,
+            memory_used_mb=memory.used / (1024**2),
+            memory_available_mb=memory.available / (1024**2),
+            disk_usage_percent=disk.percent,
+            disk_used_gb=disk.used / (1024**3),
+            disk_free_gb=disk.free / (1024**3),
+            network_bytes_sent=bytes_sent,
+            network_bytes_recv=bytes_recv,
+            gpu_memory_used_mb=gpu_memory_used,
+            gpu_memory_percent=gpu_memory_percent,
+            gpu_utilization_percent=gpu_utilization,
+        )
 
     def log_model_artifact(
         self, run_id: str, model_path: str, artifact_name: str = "model"
