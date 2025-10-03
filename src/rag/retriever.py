@@ -47,7 +47,7 @@ class Retriever:
         results = self.db.collection.query(
             query_embeddings=[query_embedding],
             n_results=top_k,
-            include=["documents", "metadatas"],  # Only fetch needed fields
+            include=["documents", "metadatas"],
         )
 
         # Process results efficiently

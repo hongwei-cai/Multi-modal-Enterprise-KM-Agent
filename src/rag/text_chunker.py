@@ -5,8 +5,7 @@ import re
 import unicodedata
 from typing import List
 
-import jieba
-from transformers import AutoTokenizer
+from .model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
 
@@ -37,32 +36,29 @@ class TextChunker:
 
         # Lazy-load dependencies to avoid import-time failures
         self._tokenizer = None
-        self._nlp = None
+        self._sentence_parser = None
+        self._jieba = None
+        self.model_manager = get_model_manager()
 
     @property
     def tokenizer(self):
         if self._tokenizer is None:
-            try:
-                self._tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-            except Exception as e:
-                logger.error(f"Failed to load tokenizer: {e}")
-                raise
+            self._tokenizer = self.model_manager.load_tokenizer("bert-base-uncased")
         return self._tokenizer
 
     @property
-    def nlp(self):
-        if self._nlp is None:
-            try:
-                import spacy
+    def sentence_parser(self):
+        if self._sentence_parser is None:
+            self._sentence_parser = self.model_manager.load_spacy_model(
+                "en_core_web_sm"
+            )
+        return self._sentence_parser
 
-                self._nlp = spacy.load("en_core_web_sm")
-            except Exception as e:
-                logger.error(
-                    f"Failed to load spaCy model: {e}. Install with \
-                        'python -m spacy download en_core_web_sm'"
-                )
-                raise
-        return self._nlp
+    @property
+    def jieba(self):
+        if self._jieba is None:
+            self._jieba = self.model_manager.load_jieba()
+        return self._jieba
 
     def chunk_text(self, text: str) -> List[str]:
         """Unified chunking method based on selected strategy."""
@@ -165,7 +161,7 @@ class TextChunker:
             chunk_words = words[start:end]
             chunk_text = " ".join(chunk_words)
             chunks.append(chunk_text)
-            logger.debug(f"Created chunk {len(chunks)}: {len(chunk_words)} words")
+            logger.debug("Created chunk %d: %d words", len(chunks), len(chunk_words))
 
             # Move start position with overlap
             start += self.chunk_size - self.overlap
@@ -173,8 +169,9 @@ class TextChunker:
                 break
 
         logger.info(
-            f"Text chunking complete: {len(chunks)} chunks created \
-                from {len(words)} words"
+            "Text chunking complete: %d chunks created from %d words",
+            len(chunks),
+            len(words),
         )
         return chunks
 
@@ -203,7 +200,7 @@ class TextChunker:
             return []
 
         try:
-            doc = self.nlp(text)
+            doc = self.sentence_parser(text)
             chunks = []
             current_chunk: List[str] = []
             current_length = 0
@@ -258,14 +255,17 @@ class TextChunker:
                 chunks.append(self.tokenizer.convert_tokens_to_string(current_chunk))
 
             logger.info(
-                f"Sentence-based chunking: {len(chunks)} chunks from "
-                f"{len(list(doc.sents))} sentences (size={self.chunk_size}, \
-                    overlap={self.overlap})"
+                "Sentence-based chunking: %d chunks from %d sentences\
+                    (size=%d, overlap=%d)",
+                len(chunks),
+                len(list(doc.sents)),
+                self.chunk_size,
+                self.overlap,
             )
             return chunks
 
         except Exception as e:
-            logger.error(f"Sentence processing failed: {str(e)}")
+            logger.error("Sentence processing failed: %s, %s", e, str(e))
             raise
 
     def _chunk_chinese_text(self, text: str) -> List[str]:
@@ -294,7 +294,7 @@ class TextChunker:
 
         try:
             # Use jieba for Chinese word segmentation
-            words = list(jieba.cut(text))
+            words = list(self.jieba.cut(text))
             chunks = []
             start = 0
 
@@ -308,13 +308,17 @@ class TextChunker:
                 start += self.chunk_size - self.overlap  # Apply overlap
 
             logger.info(
-                f"Chinese word-based chunking: {len(chunks)} chunks from {len(words)} \
-                    words (size={self.chunk_size}, overlap={self.overlap})"
+                "Chinese word-based chunking: %d chunks from %d words \
+                    (size=%d, overlap=%d)",
+                len(chunks),
+                len(words),
+                self.chunk_size,
+                self.overlap,
             )
             return chunks
 
         except Exception as e:
-            logger.error(f"Chinese text processing failed: {str(e)}")
+            logger.error("Chinese text processing failed: %s", str(e))
             raise
 
     def _normalize_text(self, text: str) -> str:

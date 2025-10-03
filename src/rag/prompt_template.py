@@ -12,17 +12,14 @@ class PromptTemplate:
     def __init__(
         self,
         system_role: str = "You are a helpful assistant. Answer the question \
-            based on the provided context.",
+            based on the provided context. If you don't know the answer, say \
+                \"I don't know\".",
         template: Optional[str] = None,
     ):
         self.system_role = system_role
         if template is None:
-            template = (
-                "{system_role}\n\n"
-                "Context:\n{context}\n\n"
-                "Question: {question}\n\n"
-                "Answer:"
-            )
+            template = "Answer the question based on the context.\
+                \n\nQuestion: {question}\n\nContext: {context}"
         self.template = template
 
     def format_prompt(
@@ -49,9 +46,7 @@ class PromptTemplate:
             context = context[:max_context_length] + "..."
 
         # Format the prompt
-        prompt = self.template.format(
-            system_role=self.system_role, context=context, question=question
-        )
+        prompt = self.template.format(context=context, question=question)
         return prompt
 
 

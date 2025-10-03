@@ -1,244 +1,258 @@
-# Sprint 2: Model Customization and Performance Optimization - User Stories Breakdown
+# Sprint 2: Model Customization and Performance Optimization - Local Transformers Edition
 
-## Story 1: Experiment Tracking Infrastructure
+## Story 1: Advanced Model Management with Transformers
 
-**Branch Name**: `feature/mlflow-experiment-tracking`
-
-### Commit Sequence:
-1. **Commit Message**: `feat: integrate MLflow for experiment tracking`
-   - Install and configure MLflow tracking server
-   - Set up experiment and run management
-
-2. **Commit Message**: `feat: add experiment configuration management`
-   - Create configurable experiment parameters (hyperparameters, model settings)
-   - Implement parameter validation and serialization
-
-3. **Commit Message**: `feat: implement metrics logging and visualization`
-   - Log training metrics (loss, accuracy) to MLflow
-   - Set up metric comparison dashboards
-
-## Story 2: Domain-Specific QA Dataset Creation
-
-**Branch Name**: `feature/domain-dataset-generation`
+**Branch Name**: `feature/advanced-transformers`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement QA pair generation from documents`
-   - Create automated QA generation using LLM
-   - Extract question-answer pairs from existing knowledge base
+1. **Commit Message**: `feat: enhance LLM client with model optimization features` ✅
+   - Add model quantization support (4-bit/8-bit)
+   - Implement device mapping optimization for M1 Pro
+   - Add model caching and memory management
 
-2. **Commit Message**: `feat: add data validation and quality checks`
-   - Implement data quality metrics (answer relevance, question clarity)
-   - Add manual review and correction workflow
+2. **Commit Message**: `feat: implement dynamic model selection strategy` ✅
+   - Create quality-speed tradeoff configurations
+   - Add automatic model downgrade under memory pressure
+   - Implement model performance benchmarking
 
-3. **Commit Message**: `feat: create train/validation/test splits`
-   - Implement stratified splitting based on document topics
-   - Ensure no data leakage between splits
+3. **Commit Message**: `feat: add model versioning and hot-swapping` ✅
+   - Implement seamless model switching
+   - Add model configuration management
+   - Create A/B testing framework for different models
+
+## Story 2: Local Experiment Tracking Infrastructure
+
+**Branch Name**: `feature/local-experiment-tracking`
+
+### Commit Sequence:
+1. **Commit Message**: `feat: setup MLflow for local experiment tracking`
+   - Configure MLflow with SQLite backend
+   - Implement experiment organization and versioning
+   - Add model performance metrics logging
+
+2. **Commit Message**: `feat: implement comprehensive experiment logging`
+   - Log prompt variations and model responses
+   - Track retrieval performance and accuracy metrics
+   - Monitor system resource usage during experiments
+
+3. **Commit Message**: `feat: create experiment analysis dashboard`
+   - Build local MLflow UI for result visualization
+   - Implement experiment comparison and diffing
+   - Add performance trend analysis
 
 ## Story 3: PEFT/LoRA Fine-tuning Implementation
 
 **Branch Name**: `feature/peft-lora-finetuning`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement LoRA configuration for Llama 3`
-   - Set up PEFT LoRA parameters (rank, alpha, dropout)
-   - Configure target modules for efficient adaptation
+1. **Commit Message**: `feat: implement LoRA configuration for local models`
+   - Set up PEFT with optimal parameters for M1 Pro
+   - Configure LoRA layers for efficient adaptation
+   - Add model adapter saving and loading
 
-2. **Commit Message**: `feat: build fine-tuning training pipeline`
-   - Create training loop with gradient accumulation
-   - Implement learning rate scheduling and optimizer configuration
+2. **Commit Message**: `feat: build local fine-tuning pipeline`
+   - Create training loop with gradient checkpointing
+   - Implement memory-efficient data loading
+   - Add learning rate scheduling and optimization
 
-3. **Commit Message**: `feat: add model checkpointing and resume capability`
-   - Implement checkpoint saving based on validation metrics
-   - Add training resumption from checkpoints
+3. **Commit Message**: `feat: implement model checkpointing and evaluation`
+   - Add validation during training
+   - Implement best model selection
+   - Create fine-tuned model integration
 
-## Story 4: Model Evaluation Framework
+## Story 4: Dataset Creation and Management
 
-**Branch Name**: `feature/model-evaluation-framework`
+**Branch Name**: `feature/dataset-management`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement comprehensive evaluation metrics`
-   - Add BLEU, ROUGE, and semantic similarity metrics
-   - Create domain-specific accuracy measurements
+1. **Commit Message**: `feat: implement QA dataset generation from documents`
+   - Create automated question-answer pair generation
+   - Implement context-based QA extraction
+   - Add data quality validation
 
-2. **Commit Message**: `feat: build automated evaluation pipeline`
-   - Implement batch evaluation on test set
-   - Add result aggregation and reporting
+2. **Commit Message**: `feat: build dataset versioning and management`
+   - Implement dataset splitting and sampling
+   - Add dataset quality metrics
+   - Create dataset comparison tools
 
-3. **Commit Message**: `feat: create human evaluation framework`
-   - Build interface for manual quality assessment
-   - Implement inter-annotator agreement metrics
+3. **Commit Message**: `feat: add data augmentation and preprocessing`
+   - Implement text augmentation techniques
+   - Add data cleaning and normalization
+   - Create synthetic data generation
 
-## Story 5: Model Quantization Implementation
+## Story 5: Model Quantization and Optimization
 
 **Branch Name**: `feature/model-quantization`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement INT4 quantization with AWQ/GPTQ`
-   - Integrate quantization libraries (autoawq, gptq)
-   - Configure quantization parameters and calibration
+1. **Commit Message**: `feat: implement model quantization techniques`
+   - Add 4-bit quantization support
+   - Implement 8-bit quantization for better quality
+   - Create quantization-aware training pipeline
 
-2. **Commit Message**: `feat: add quantization-aware training pipeline`
-   - Implement QAT for better quantized performance
-   - Add quantization error analysis tools
+2. **Commit Message**: `feat: build performance benchmarking suite`
+   - Implement latency and throughput measurements
+   - Add memory usage tracking
+   - Create quality degradation analysis
 
-3. **Commit Message**: `feat: validate quantized model performance`
-   - Benchmark accuracy preservation after quantization
-   - Test quantized model inference compatibility
+3. **Commit Message**: `feat: add dynamic quantization strategies`
+   - Implement on-the-fly quantization
+   - Add model compression techniques
+   - Create optimal quantization selection
 
-## Story 6: vLLM Optimization Integration
+## Story 6: Advanced Evaluation Framework
 
-**Branch Name**: `feature/vllm-optimization`
-
-### Commit Sequence:
-1. **Commit Message**: `feat: integrate fine-tuned model with vLLM`
-   - Update vLLM deployment for custom fine-tuned models
-   - Configure model loading and serving parameters
-
-2. **Commit Message**: `feat: optimize vLLM serving parameters`
-   - Tune batch size, max sequence length, and parallel processing
-   - Implement continuous batching optimization
-
-3. **Commit Message**: `feat: add performance monitoring to vLLM`
-   - Integrate latency and throughput monitoring
-   - Set up GPU memory usage tracking
-
-## Story 7: A/B Testing Infrastructure
-
-**Branch Name**: `feature/ab-testing-infrastructure`
+**Branch Name**: `feature/advanced-evaluation`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement shadow mode deployment`
-   - Create parallel inference for baseline vs fine-tuned models
-   - Add request routing and response comparison
+1. **Commit Message**: `feat: implement comprehensive RAG evaluation metrics`
+   - Add retrieval accuracy scoring
+   - Implement answer quality assessment
+   - Create context utilization metrics
 
-2. **Commit Message**: `feat: build A/B testing metrics collection`
-   - Implement user feedback and quality scoring
-   - Add statistical significance testing
+2. **Commit Message**: `feat: build automated evaluation pipeline`
+   - Implement batch evaluation on test sets
+   - Add performance regression detection
+   - Create evaluation report generation
 
-3. **Commit Message**: `feat: create A/B test results dashboard`
-   - Build comparative performance visualization
-   - Implement automated winner determination
+3. **Commit Message**: `feat: add human evaluation workflow`
+   - Create local evaluation interface
+   - Implement side-by-side model comparison
+   - Add manual quality scoring
 
-## Story 8: Performance Benchmarking Suite
+## Story 7: Memory Optimization for M1 Pro
 
-**Branch Name**: `feature/performance-benchmarking`
+**Branch Name**: `feature/memory-optimization`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: create comprehensive benchmarking suite`
-   - Implement latency, throughput, and memory benchmarks
-   - Add stress testing and load testing capabilities
+1. **Commit Message**: `feat: implement smart memory management`
+   - Add dynamic model loading/unloading
+   - Implement memory usage monitoring
+   - Create automatic cleanup procedures
 
-2. **Commit Message**: `feat: add comparative performance analysis`
-   - Benchmark fine-tuned vs baseline models
-   - Compare quantized vs full-precision performance
+2. **Commit Message**: `feat: build resource-aware processing`
+   - Implement batch size optimization
+   - Add memory pressure detection
+   - Create graceful degradation handling
 
-3. **Commit Message**: `feat: generate performance optimization report`
-   - Create automated performance reporting
-   - Document optimization recommendations
+3. **Commit Message**: `feat: add embedding model optimization`
+   - Implement on-demand embedding loading
+   - Add embedding caching strategies
+   - Create memory-efficient batch processing
+
+## Story 8: Local A/B Testing Framework
+
+**Branch Name**: `feature/local-ab-testing`
+
+### Commit Sequence:
+1. **Commit Message**: `feat: implement model comparison framework`
+   - Create parallel model inference
+   - Add response quality scoring
+   - Implement statistical significance testing
+
+2. **Commit Message**: `feat: build experiment management system`
+   - Add experiment configuration
+   - Implement result collection and analysis
+   - Create automated experiment reporting
+
+3. **Commit Message**: `feat: add performance optimization insights`
+   - Generate optimization recommendations
+   - Create cost-performance tradeoff analysis
+   - Implement best practice suggestions
 
 ## Story 9: Sprint 2 Integration and Validation
 
 **Branch Name**: `feature/sprint2-integration`
 
 ### Commit Sequence:
-1. **Commit Message**: `test: validate all acceptance criteria`
-   - Run end-to-end validation of fine-tuning pipeline
-   - Verify 10% accuracy improvement target
+1. **Commit Message**: `test: validate fine-tuning and optimization results`
+   - Verify 10% improvement in domain-specific tasks
+   - Confirm memory usage within safe limits
+   - Validate system stability
 
 2. **Commit Message**: `perf: optimize end-to-end system performance`
-   - Fine-tune system parameters based on benchmarking results
-   - Optimize memory usage and inference speed
+   - Fine-tune all components for M1 Pro
+   - Implement memory usage optimization
+   - Improve response times
 
-3. **Commit Message**: `docs: update documentation with optimization results`
-   - Document fine-tuning process and results
+3. **Commit Message**: `docs: update model customization guide`
+   - Document fine-tuning procedures
    - Create performance optimization guide
-
-## Git Workflow Visualization
+   - Add troubleshooting documentation
 
 ```mermaid
 gitGraph
     commit id: "sprint1-complete"
-    branch feature/mlflow-experiment-tracking
-    checkout feature/mlflow-experiment-tracking
-    commit id: "mlflow-integration"
-    commit id: "exp-config"
-    commit id: "metrics-logging"
-    checkout main
-    merge feature/mlflow-experiment-tracking id: "merge-tracking"
 
-    branch feature/domain-dataset-generation
-    checkout feature/domain-dataset-generation
-    commit id: "qa-generation"
-    commit id: "data-validation"
-    commit id: "train-test-split"
+    branch feature/advanced-transformers
+    checkout feature/advanced-transformers
+    commit id: "model-optimization"
+    commit id: "dynamic-selection"
+    commit id: "model-versioning"
     checkout main
-    merge feature/domain-dataset-generation id: "merge-dataset"
+    merge feature/advanced-transformers id: "merge-transformers"
+
+    branch feature/local-experiment-tracking
+    checkout feature/local-experiment-tracking
+    commit id: "mlflow-setup"
+    commit id: "experiment-logging"
+    commit id: "analysis-dashboard"
+    checkout main
+    merge feature/local-experiment-tracking id: "merge-tracking"
 
     branch feature/peft-lora-finetuning
     checkout feature/peft-lora-finetuning
     commit id: "lora-config"
     commit id: "training-pipeline"
-    commit id: "checkpointing"
+    commit id: "checkpoint-evaluation"
     checkout main
     merge feature/peft-lora-finetuning id: "merge-finetuning"
 
-    branch feature/model-evaluation-framework
-    checkout feature/model-evaluation-framework
-    commit id: "eval-metrics"
-    commit id: "auto-eval"
-    commit id: "human-eval"
+    branch feature/dataset-management
+    checkout feature/dataset-management
+    commit id: "qa-generation"
+    commit id: "dataset-versioning"
+    commit id: "data-augmentation"
     checkout main
-    merge feature/model-evaluation-framework id: "merge-evaluation"
+    merge feature/dataset-management id: "merge-dataset"
 
     branch feature/model-quantization
     checkout feature/model-quantization
-    commit id: "int4-quantization"
-    commit id: "qat-pipeline"
-    commit id: "quant-validation"
+    commit id: "quantization-techniques"
+    commit id: "performance-benchmarking"
+    commit id: "dynamic-quantization"
     checkout main
     merge feature/model-quantization id: "merge-quantization"
 
-    branch feature/vllm-optimization
-    checkout feature/vllm-optimization
-    commit id: "vllm-integration"
-    commit id: "serving-optimization"
-    commit id: "performance-monitoring"
+    branch feature/advanced-evaluation
+    checkout feature/advanced-evaluation
+    commit id: "rag-metrics"
+    commit id: "auto-evaluation"
+    commit id: "human-evaluation"
     checkout main
-    merge feature/vllm-optimization id: "merge-vllm"
+    merge feature/advanced-evaluation id: "merge-evaluation"
 
-    branch feature/ab-testing-infrastructure
-    checkout feature/ab-testing-infrastructure
-    commit id: "shadow-mode"
-    commit id: "metrics-collection"
-    commit id: "results-dashboard"
+    branch feature/memory-optimization
+    checkout feature/memory-optimization
+    commit id: "memory-management"
+    commit id: "resource-processing"
+    commit id: "embedding-optimization"
     checkout main
-    merge feature/ab-testing-infrastructure id: "merge-abtesting"
+    merge feature/memory-optimization id: "merge-memory"
 
-    branch feature/performance-benchmarking
-    checkout feature/performance-benchmarking
-    commit id: "benchmark-suite"
-    commit id: "comparative-analysis"
-    commit id: "optimization-report"
+    branch feature/local-ab-testing
+    checkout feature/local-ab-testing
+    commit id: "model-comparison"
+    commit id: "experiment-management"
+    commit id: "optimization-insights"
     checkout main
-    merge feature/performance-benchmarking id: "merge-benchmarking"
+    merge feature/local-ab-testing id: "merge-abtesting"
 
     branch feature/sprint2-integration
     checkout feature/sprint2-integration
-    commit id: "acceptance-validation"
-    commit id: "system-optimization"
-    commit id: "docs-update"
+    commit id: "validation-tests"
+    commit id: "performance-optimization"
+    commit id: "documentation-update"
     checkout main
     merge feature/sprint2-integration id: "sprint2-complete"
 ```
-
-## Success Metrics for Each Story
-
-- **Story 1**: MLflow tracks 100% of experiments with reproducible configurations
-- **Story 2**: Generate 1000+ high-quality QA pairs covering domain knowledge
-- **Story 3**: Fine-tuned model shows measurable improvement on validation set
-- **Story 4**: Evaluation framework provides comprehensive model assessment
-- **Story 5**: Quantization reduces model size by 40% with <2% accuracy drop
-- **Story 6**: vLLM optimization achieves 30% inference speed improvement
-- **Story 7**: A/B testing provides statistical significance (p < 0.05)
-- **Story 8**: Performance benchmarks show consistent improvement across metrics
-- **Story 9**: All Sprint 2 acceptance criteria met and documented

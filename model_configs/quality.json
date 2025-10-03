@@ -1,0 +1,13 @@
+{
+  "name": "quality",
+  "config": {
+    "name": "model2",
+    "tier": "quality",
+    "memory_gb": 4.0,
+    "latency_ms": 200,
+    "quality_score": 0.9,
+    "description": "Quality model"
+  },
+  "created_at": "2025-10-03T13:03:36.779062",
+  "performance_metrics": {}
+}
