@@ -13,7 +13,6 @@ transformers>=4.35.0
 torch>=2.8.0
 torchvision>=0.23.0
 torchaudio>=2.8.0
-ollma>=0.12.3
 
 # Data Validation & API Schema
 pydantic>=2.4.2
