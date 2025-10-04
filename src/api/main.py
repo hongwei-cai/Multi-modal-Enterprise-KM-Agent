@@ -71,7 +71,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             # Re-raise HTTPExceptions as-is
             raise
         except Exception as e:
-            logger.error(f"Unhandled error: {e}", exc_info=True)
+            logger.error("Unhandled error: %{e}", exc_info=True)
             return JSONResponse(
                 status_code=500,
                 content={"detail": "Internal server error", "error": str(e)},
