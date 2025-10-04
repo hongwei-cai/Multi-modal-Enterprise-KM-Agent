@@ -8,7 +8,12 @@ This package contains specialized managers for different aspects of model manage
 """
 
 from .experiment_manager import ExperimentManager
-from .lora_manager import LoRAManager
+from .lora_manager import LoRAConfigManager, LoRAManager
 from .quantization_manager import QuantizationManager
 
-__all__ = ["LoRAManager", "QuantizationManager", "ExperimentManager"]
+__all__ = [
+    "LoRAManager",
+    "LoRAConfigManager",
+    "QuantizationManager",
+    "ExperimentManager",
+]

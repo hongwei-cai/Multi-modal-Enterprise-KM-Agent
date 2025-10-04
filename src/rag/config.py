@@ -2,7 +2,7 @@
 Model Configuration Classes
 
 This module contains all the data classes and enums used for model configuration,
-benchmarking, versioning, and A/B testing.
+benchmarking, versioning, A/B testing, and LoRA fine-tuning.
 """
 
 import time
@@ -72,3 +72,18 @@ class ABTestConfig:
     traffic_split: float = 0.5  # 50/50 split
     duration_hours: int = 24
     metrics: List[str] = field(default_factory=lambda: ["latency", "quality"])
+
+
+@dataclass
+class LoRAConfig:
+    """Configuration for LoRA fine-tuning."""
+
+    r: int = 8  # LoRA rank
+    lora_alpha: int = 16  # LoRA scaling parameter
+    target_modules: List[str] = field(
+        default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj"]
+    )  # Target attention modules
+    lora_dropout: float = 0.05
+    bias: str = "none"  # Bias handling
+    task_type: str = "CAUSAL_LM"  # Task type for PEFT
+    inference_mode: bool = True  # Use inference mode for memory efficiency

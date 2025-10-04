@@ -15,14 +15,20 @@ from peft import PeftModel
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from .config import ABTestConfig, BenchmarkResult, ModelConfig, ModelTier, ModelVersion
+from .config import (
+    ABTestConfig,
+    BenchmarkResult,
+    LoRAConfig,
+    ModelConfig,
+    ModelTier,
+    ModelVersion,
+)
 from .experiment_tracker import (
     ExperimentConfig,
     MLflowExperimentTracker,
     PerformanceMetrics,
 )
 from .managers import ExperimentManager, LoRAManager, QuantizationManager
-from .managers.lora_manager import LoRAConfig
 
 logger = logging.getLogger(__name__)
 
