@@ -12,7 +12,7 @@ from .experiment_tracker import (
     PromptResponseLog,
     track_model_performance,
 )
-from .model_manager import get_model_manager
+from .managers.model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +232,7 @@ class LLMClient:
         traffic_split: float = 0.5,
     ):
         """Start A/B testing between two models."""
-        from src.rag.model_manager import ABTestConfig
+        from src.rag.managers.model_manager import ABTestConfig
 
         manager = get_model_manager()
         config = ABTestConfig(

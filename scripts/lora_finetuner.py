@@ -9,21 +9,23 @@ This script provides flexible LoRA operations including:
 - Model evaluation and testing
 
 Usage:
-    python scripts/example_lora_usage.py --help
-    python scripts/example_lora_usage.py --prepare \\
-        --model microsoft/DialoGPT-medium
-    python scripts/example_lora_usage.py --train \\
-        --model microsoft/DialoGPT-medium --dataset your_dataset
-    python scripts/example_lora_usage.py --save-adapter \\
-        --adapter-name my_adapter
-    python scripts/example_lora_usage.py --load-adapter \\
-        --adapter-name my_adapter --test
+    python scripts/lora_finetuner.py --help
+    python scripts/lora_finetuner.py --prepare --model microsoft/DialoGPT-medium
+    python scripts/lora_finetuner.py --train --model microsoft/DialoGPT-medium \
+        --dataset your_dataset
+    python scripts/lora_finetuner.py --save-adapter --adapter-name my_adapter
+    python scripts/lora_finetuner.py --load-adapter --adapter-name my_adapter --test
 """
 
 import argparse
+import json
 import logging
 import sys
 from typing import Optional
+
+import torch
+from datasets import Dataset
+from transformers import Trainer, TrainingArguments
 
 from src.rag.managers.model_manager import get_model_manager
 
@@ -123,13 +125,10 @@ class LoRAFinetuner:
             return False
 
         try:
-            import torch
-            from transformers import Trainer, TrainingArguments
-
             self.logger.info(f"Starting training on dataset: {dataset_path}")
             self.logger.info(
-                f"Training parameters: epochs={num_epochs}, "
-                f"batch_size={batch_size}, lr={learning_rate}"
+                f"Training parameters: epochs={num_epochs}, \
+                             batch_size={batch_size}, lr={learning_rate}"
             )
 
             # Load dataset (you'll need to implement this based on your data format)
@@ -141,8 +140,7 @@ class LoRAFinetuner:
                 num_train_epochs=num_epochs,
                 per_device_train_batch_size=batch_size,
                 learning_rate=learning_rate,
-                fp16=torch.cuda.is_available(),
-                # Use FP16 if GPU available
+                fp16=torch.cuda.is_available(),  # Use FP16 if GPU available
                 logging_steps=10,
                 save_steps=500,
                 save_total_limit=2,
@@ -191,8 +189,8 @@ class LoRAFinetuner:
 
             for query in test_queries:
                 self.logger.info(f"Query: {query}")
-                # Generate response (you'll need to implement this based on your
-                # model type)
+                # Generate response (you'll need to implement this \
+                # based on your model type)
                 response = self._generate_response(query)
                 self.logger.info(f"Response: {response}")
                 print(f"Q: {query}")
@@ -205,26 +203,29 @@ class LoRAFinetuner:
             self.logger.error(f"Testing failed: {e}")
             return False
 
-    def _load_dataset(self, dataset_path: str):
-        """Load dataset for training. Implement based on your data format."""
-        # Placeholder - implement based on your dataset format
-        # This could load from JSON, CSV, HuggingFace datasets, etc.
-        self.logger.warning(
-            "Dataset loading not implemented. Please implement _load_dataset method."
-        )
-        raise NotImplementedError(
-            "Dataset loading needs to be implemented for your data format"
-        )
+    def _load_dataset(self, dataset_path: str) -> Dataset:
+        """Load dataset for training. Assumes JSON file with list of {'text': '...'}."""
+        with open(dataset_path, "r") as f:
+            data = json.load(f)
+
+        dataset = Dataset.from_list(data)
+
+        def tokenize_function(example):
+            tokenized = self.current_tokenizer(
+                example["text"], truncation=True, padding="max_length"
+            )
+            tokenized["labels"] = tokenized["input_ids"].copy()
+            return tokenized
+
+        tokenized_dataset = dataset.map(tokenize_function, batched=True)
+        return tokenized_dataset
 
     def _generate_response(self, query: str) -> str:
-        """Generate response for a query.
-
-        Implement based on your model type.
-        """
+        """Generate response for a query. Implement based on your model type."""
         # Placeholder - implement based on your model architecture
         self.logger.warning(
-            "Response generation not implemented. Please implement "
-            "_generate_response method."
+            "Response generation not implemented. \
+                            Please implement _generate_response method."
         )
         return "Response generation not implemented yet."
 
@@ -237,25 +238,24 @@ def main():
         epilog="""
 Examples:
   # Prepare a model for LoRA
-  python scripts/example_lora_usage.py --prepare \\
-      --model microsoft/DialoGPT-medium
+  python scripts/lora_finetuner.py --prepare --model microsoft/DialoGPT-medium
 
   # Train a model
-  python scripts/example_lora_usage.py --prepare --train \\
-      --model microsoft/DialoGPT-medium --dataset ./data/train.json
+  python scripts/lora_finetuner.py --prepare --train --model \
+    microsoft/DialoGPT-medium --dataset ./data/train.json
 
   # Save an adapter
-  python scripts/example_lora_usage.py --prepare --save-adapter \\
-      --adapter-name my_adapter --model microsoft/DialoGPT-medium
+  python scripts/lora_finetuner.py --prepare --save-adapter \
+    --adapter-name my_adapter --model microsoft/DialoGPT-medium
 
   # Load and test an adapter
-  python scripts/example_lora_usage.py --load-adapter \\
-      --adapter-name my_adapter --model microsoft/DialoGPT-medium --test
+  python scripts/lora_finetuner.py --load-adapter --adapter-name my_adapter \
+    --model microsoft/DialoGPT-medium --test
 
   # Full pipeline: prepare, train, save, test
-  python scripts/example_lora_usage.py --prepare --train --save-adapter \\
-      --test --model microsoft/DialoGPT-medium --dataset ./data/train.json \\
-      --adapter-name trained_adapter
+  python scripts/lora_finetuner.py --prepare --train --save-adapter --test \
+    --model microsoft/DialoGPT-medium --dataset ./data/train.json \
+        --adapter-name trained_adapter
         """,
     )
 
@@ -329,8 +329,8 @@ Examples:
         [args.prepare, args.train, args.save_adapter, args.load_adapter, args.test]
     ):
         parser.error(
-            "At least one operation must be specified "
-            "(--prepare, --train, --save-adapter, --load-adapter, or --test)"
+            "At least one operation must be specified (--prepare, \
+                     --train, --save-adapter, --load-adapter, or --test)"
         )
 
     if args.train and not args.dataset:

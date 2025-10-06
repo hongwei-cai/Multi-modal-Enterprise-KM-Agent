@@ -1,16 +1,21 @@
 from unittest.mock import MagicMock, patch
 
-from src.rag.model_manager import ABTestConfig, ModelConfig, ModelManager, ModelTier
+from src.rag.managers.model_manager import (
+    ABTestConfig,
+    ModelConfig,
+    ModelManager,
+    ModelTier,
+)
 
 
 def test_model_versioning():
     """Test model versioning functionality."""
-    with patch("src.rag.model_manager.ModelManager._load_model_versions"), patch(
-        "pathlib.Path.mkdir"
-    ), patch(
+    with patch(
+        "src.rag.managers.model_manager.ModelManager._load_model_versions"
+    ), patch("pathlib.Path.mkdir"), patch(
         "pathlib.Path.glob", return_value=[]
     ), patch(  # Mock to avoid loading files
-        "src.rag.model_manager.MLflowExperimentTracker"
+        "src.rag.managers.model_manager.MLflowExperimentTracker"
     ):
         manager = ModelManager()
 
@@ -26,10 +31,10 @@ def test_model_versioning():
 
 def test_model_switching():
     """Test seamless model switching."""
-    with patch("src.rag.model_manager.ModelManager._load_model_versions"), patch(
-        "pathlib.Path.mkdir"
-    ), patch("pathlib.Path.glob", return_value=[]), patch(
-        "src.rag.model_manager.MLflowExperimentTracker"
+    with patch(
+        "src.rag.managers.model_manager.ModelManager._load_model_versions"
+    ), patch("pathlib.Path.mkdir"), patch("pathlib.Path.glob", return_value=[]), patch(
+        "src.rag.managers.model_manager.MLflowExperimentTracker"
     ):
         manager = ModelManager()
 
@@ -55,10 +60,10 @@ def test_model_switching():
 
 def test_ab_testing():
     """Test A/B testing framework."""
-    with patch("src.rag.model_manager.ModelManager._load_model_versions"), patch(
-        "pathlib.Path.mkdir"
-    ), patch("pathlib.Path.glob", return_value=[]), patch(
-        "src.rag.model_manager.MLflowExperimentTracker"
+    with patch(
+        "src.rag.managers.model_manager.ModelManager._load_model_versions"
+    ), patch("pathlib.Path.mkdir"), patch("pathlib.Path.glob", return_value=[]), patch(
+        "src.rag.managers.model_manager.MLflowExperimentTracker"
     ):
         manager = ModelManager()
 

@@ -15,7 +15,7 @@ from peft import PeftModel
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from .config import (
+from ..config import (
     ABTestConfig,
     BenchmarkResult,
     LoRAConfig,
@@ -23,12 +23,14 @@ from .config import (
     ModelTier,
     ModelVersion,
 )
-from .experiment_tracker import (
+from ..experiment_tracker import (
     ExperimentConfig,
     MLflowExperimentTracker,
     PerformanceMetrics,
 )
-from .managers import ExperimentManager, LoRAManager, QuantizationManager
+from .experiment_manager import ExperimentManager
+from .lora_manager import LoRAManager
+from .quantization_manager import QuantizationManager
 
 logger = logging.getLogger(__name__)
 

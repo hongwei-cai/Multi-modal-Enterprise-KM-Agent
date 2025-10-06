@@ -43,3 +43,4 @@ optimum>=1.13.2
 accelerate>=0.24.0
 psutil>=5.9.0
 peft>=0.7.0
+datasets>=2.14.0

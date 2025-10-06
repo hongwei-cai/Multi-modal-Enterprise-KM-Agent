@@ -24,7 +24,7 @@ class ModelConfig:
     """Configuration for a model with performance characteristics."""
 
     name: str
-    tier: ModelTier
+    tier: ModelTier  # FAST/BALANCED/QUALITY
     memory_gb: float
     latency_ms: float  # Estimated latency per token
     quality_score: float  # Relative quality score (0-1)

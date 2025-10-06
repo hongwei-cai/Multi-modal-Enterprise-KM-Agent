@@ -5,7 +5,7 @@ import re
 import unicodedata
 from typing import List
 
-from .model_manager import get_model_manager
+from .managers.model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
 

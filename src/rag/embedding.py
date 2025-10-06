@@ -7,7 +7,7 @@ import logging
 import os
 from typing import List, Optional
 
-from .model_manager import get_model_manager
+from .managers.model_manager import get_model_manager
 
 logger = logging.getLogger(__name__)
 
