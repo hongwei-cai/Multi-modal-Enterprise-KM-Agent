@@ -47,6 +47,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH="/app" \
     PORT=8000
 
+ENV PROJECT_ROOT=/app
+ENV RAW_DATA_DIR=/app/data/raw
+ENV PROCESSED_DATA_DIR=/app/data/processed
+ENV MODEL_CONFIGS_DIR=/app/model_configs
+ENV MLRUNS_DIR=/app/mlruns
+ENV CHROMA_PERSIST_DIR=/app/chroma_db
+
 # ---- Install Runtime-only System Deps (e.g., libgomp1 for torch) ----
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
@@ -60,7 +67,6 @@ WORKDIR /app
 
 # ---- Copy Application Code ----
 # Order matters: copy least frequently changed files first for caching
-COPY .env .
 COPY src/ ./src/
 COPY configs/ ./configs/
 COPY scripts/ ./scripts/

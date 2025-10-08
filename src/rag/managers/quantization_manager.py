@@ -54,12 +54,12 @@ class QuantizationManager:
         """Get quantization configuration for model loading."""
         if quant_type == "dynamic":
             return {
-                "torch_dtype": torch.float32,  # Quantization works with float32
+                "dtype": torch.float32,  # Quantization works with float32
                 "device_map": {"": "cpu"},  # Use CPU for quantized models
             }
         elif quant_type == "static":
             return {
-                "torch_dtype": torch.float32,
+                "dtype": torch.float32,
                 "device_map": {"": "cpu"},
             }
         else:

@@ -1,0 +1,13 @@
+{
+  "name": "speed",
+  "config": {
+    "name": "model1",
+    "tier": "speed",
+    "memory_gb": 1.0,
+    "latency_ms": 50,
+    "quality_score": 0.6,
+    "description": "Speed model"
+  },
+  "created_at": 1759935476.186732,
+  "performance_metrics": {}
+}

@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from ..config import LoRAConfig
+from configs.model_config import LoRAConfig
 
 logger = logging.getLogger(__name__)
 
@@ -264,14 +264,14 @@ class LoRAConfigManager:
 
     def load_base_model(
         self,
-        torch_dtype=None,
+        dtype=None,
         trust_remote_code: bool = False,
     ):
         """
         Load the base model and tokenizer with memory optimizations.
 
         Args:
-            torch_dtype: Model dtype (default: float16 for MPS, float32 for CPU)
+            dtype: Model dtype (default: float16 for MPS, float32 for CPU)
             trust_remote_code: Whether to trust remote code in model files
 
         Returns:
@@ -279,8 +279,8 @@ class LoRAConfigManager:
         """
         import torch
 
-        if torch_dtype is None:
-            torch_dtype = torch.float16 if self.device == "mps" else torch.float32
+        if dtype is None:
+            dtype = torch.float16 if self.device == "mps" else torch.float32
 
         logger.info(f"Loading model from {self.base_model_path}")
 
@@ -296,7 +296,7 @@ class LoRAConfigManager:
 
         # Load model with memory optimizations
         model_kwargs = {
-            "torch_dtype": torch_dtype,
+            "dtype": dtype,
             "low_cpu_mem_usage": True,
             "trust_remote_code": trust_remote_code,
         }

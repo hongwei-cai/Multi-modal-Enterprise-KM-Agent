@@ -3,9 +3,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from chromadb import Client as ChromaClient
-from chromadb import EphemeralClient, HttpClient
-from chromadb.config import Settings
+from chromadb import EphemeralClient, HttpClient, PersistentClient
 
 from src.rag.embedding import EmbeddingModel, get_embedding_model
 
@@ -23,21 +21,28 @@ class VectorDatabase:
 
         Args:
             persist_directory: Directory to persist the database. \
-                Defaults to env var or fallback.
+                If None, uses environment variables or fallback.
+                - CHROMA_DB_PATH: HTTP URL for remote ChromaDB server
+                - CHROMA_PERSIST_DIR: Local directory for persistence
         """
         if persist_directory is None:
-            persist_directory = os.getenv("CHROMA_PERSIST_DIR")
-            if not persist_directory:
-                # Fallback: Project-root-relative path
-                persist_directory = str(
-                    Path(__file__).parent.parent.parent
-                    / "data"
-                    / "processed"
-                    / "chroma_db"
-                )
-                logger.warning(
-                    "CHROMA_PERSIST_DIR not set, using fallback: %s", persist_directory
-                )
+            # Check for HTTP endpoint first
+            http_url = os.getenv("CHROMA_DB_PATH")
+            if http_url and http_url.startswith("http"):
+                persist_directory = http_url
+            else:
+                # Check for local persistence directory
+                persist_directory = os.getenv("CHROMA_PERSIST_DIR")
+                if not persist_directory:
+                    # Fallback: Project root chroma_db directory
+                    persist_directory = str(
+                        Path(__file__).parent.parent.parent / "chroma_db"
+                    )
+                    logger.warning(
+                        "Neither CHROMA_DB_PATH nor CHROMA_PERSIST_DIR set, "
+                        "using fallback: %s",
+                        persist_directory,
+                    )
 
         # Validate path (optional: ensure it's writable or exists)
         if not persist_directory.startswith("http") and persist_directory != ":memory:":
@@ -62,9 +67,7 @@ class VectorDatabase:
                 self.client = EphemeralClient()
             else:
                 # Local persistent mode
-                self.client = ChromaClient(
-                    Settings(persist_directory=persist_directory)
-                )
+                self.client = PersistentClient(path=persist_directory)
         self.collection = None
 
         logger.info(
@@ -168,6 +171,21 @@ class VectorDatabase:
         self.client.delete_collection(name=name)
         logger.info("Collection '%s' deleted.", name)
 
+    def get(self, include: Optional[List[str]] = None) -> Dict[str, Any]:
+        """
+        Get all documents in the collection.
+
+        Args:
+            include: List of fields to include (e.g., ['metadatas']).
+
+        Returns:
+            Dict with included fields.
+        """
+        if self.collection is None:
+            raise ValueError("Collection not created. Call create_collection() first.")
+
+        return self.collection.get(include=include or [])
+
 
 # Convenience function
 def get_vector_db(db_path: Optional[str] = None) -> VectorDatabase:
@@ -175,7 +193,10 @@ def get_vector_db(db_path: Optional[str] = None) -> VectorDatabase:
     Get a VectorDatabase instance.
 
     Args:
-        db_path: Path to vector DB. If None, uses env var or fallback.
+        db_path: Path to vector DB. Can be:
+            - Local directory path for persistence
+            - HTTP URL for remote ChromaDB server
+            - If None, uses CHROMA_DB_PATH or CHROMA_PERSIST_DIR env vars
 
     Returns:
         VectorDatabase instance.

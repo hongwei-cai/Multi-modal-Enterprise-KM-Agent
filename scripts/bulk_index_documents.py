@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-from src.rag.indexing_pipeline import get_indexing_pipeline
+from src.rag.components import get_indexing_pipeline
 
 
 def setup_logging(verbose: bool = False):

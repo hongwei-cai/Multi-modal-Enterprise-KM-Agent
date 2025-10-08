@@ -110,27 +110,94 @@ manager.save_lora_adapter(lora_model, "my_adapter", "microsoft/phi-2")
 model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
 ```
 
-## Story 4: Dataset Creation and Management
+## Story 3.5: Domain Knowledge Base Construction
+
+**Branch Name**: `feature/domain-knowledge-base`
+
+### Commit Sequence:
+1. **Commit Message**: `feat: implement automated QA pair generation`
+   - Create LLM-powered question generation from documents
+   - Implement answer extraction and validation
+   - Build quality filtering pipeline
+   - **Implementation Details**:
+     - Use existing DialoGPT-medium for question generation
+     - Extract context-answer pairs from Wikipedia selected subset
+     - Implement data quality metrics (answer relevance, question clarity)
+     - Target: Generate 500-1000 high-quality QA pairs
+
+2. **Commit Message**: `feat: build knowledge base organization system`
+   - Implement topic-based document clustering
+   - Create train/validation/test splits (80/10/10)
+   - Add dataset versioning and metadata management
+   - **Implementation Details**:
+     - Stratified splitting based on document topics
+     - Ensure no data leakage between splits
+     - Create dataset statistics and quality reports
+
+3. **Commit Message**: `feat: integrate knowledge base with RAG system`
+   - Update ChromaDB with new domain knowledge
+   - Create baseline evaluation on hotpotqa_dev
+   - Implement knowledge base update pipeline
+   - **Implementation Details**:
+     - Measure baseline RAG performance before fine-tuning
+     - Establish performance benchmarks for comparison
+     - Create automated knowledge base refresh workflow
+
+## Story 4: Practical LoRA Fine-tuning Execution
+
+**Branch Name**: `feature/practical-lora-finetuning`
+
+### Commit Sequence:
+1. **Commit Message**: `feat: prepare training data for RAG optimization`
+   - Format dolly-15k-mini for instruction following
+   - Create RAG-specific training examples
+   - Implement data preprocessing and tokenization
+   - **Implementation Details**:
+     - Convert dolly-15k-mini to DialoGPT-compatible format
+     - Add context utilization prompts for RAG scenarios
+     - Create data loaders with memory-efficient batching
+
+2. **Commit Message**: `feat: execute LoRA fine-tuning on target models`
+   - Run fine-tuning on DialoGPT-medium with dolly-15k-mini
+   - Implement training progress monitoring
+   - Add checkpoint saving and validation
+   - **Implementation Details**:
+     - Use LoRA configuration from Story 3 (r=8, alpha=16)
+     - Train for 3-5 epochs with early stopping
+     - Monitor GPU memory usage and adjust batch size
+     - Save adapters after each epoch
+
+3. **Commit Message**: `feat: validate fine-tuning results and integration`
+   - Evaluate on hotpotqa_dev for performance comparison
+   - Integrate fine-tuned adapters into RAG pipeline
+   - Measure improvement over baseline
+   - **Implementation Details**:
+     - Compare pre-fine-tuning vs post-fine-tuning performance
+     - Calculate accuracy improvement percentage
+     - Test integration with existing RAG system
+     - Document performance gains and limitations
+
+## Story 5: Dataset Creation and Management (原Story 4)
 
 **Branch Name**: `feature/dataset-management`
 
 ### Commit Sequence:
 1. **Commit Message**: `feat: implement QA dataset generation from documents`
-   - Create automated question-answer pair generation
-   - Implement context-based QA extraction
-   - Add data quality validation
+   - Enhance with lessons from Story 3.5
+   - Improve data quality based on fine-tuning results
+   - Add automated data augmentation
 
 2. **Commit Message**: `feat: build dataset versioning and management`
    - Implement dataset splitting and sampling
-   - Add dataset quality metrics
+   - Add dataset quality metrics based on fine-tuning outcomes
    - Create dataset comparison tools
 
 3. **Commit Message**: `feat: add data augmentation and preprocessing`
-   - Implement text augmentation techniques
-   - Add data cleaning and normalization
-   - Create synthetic data generation
+   - Implement text augmentation techniques optimized for RAG
+   - Add data cleaning and normalization based on validation results
+   - Create synthetic data generation for difficult cases
 
-## Story 5: Model Quantization and Optimization
+## Story 6: Model Quantization and Optimization
 
 **Branch Name**: `feature/model-quantization`
 
@@ -150,7 +217,7 @@ model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
    - Add model compression techniques
    - Create optimal quantization selection
 
-## Story 6: Advanced Evaluation Framework
+## Story 7: Advanced Evaluation Framework
 
 **Branch Name**: `feature/advanced-evaluation`
 
@@ -170,7 +237,7 @@ model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
    - Implement side-by-side model comparison
    - Add manual quality scoring
 
-## Story 7: Memory Optimization for M1 Pro
+## Story 8: Memory Optimization for M1 Pro
 
 **Branch Name**: `feature/memory-optimization`
 
@@ -190,7 +257,7 @@ model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
    - Add embedding caching strategies
    - Create memory-efficient batch processing
 
-## Story 8: Local A/B Testing Framework
+## Story 9: Local A/B Testing Framework
 
 **Branch Name**: `feature/local-ab-testing`
 
@@ -210,7 +277,7 @@ model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
    - Create cost-performance tradeoff analysis
    - Implement best practice suggestions
 
-## Story 9: Sprint 2 Integration and Validation
+## Story 10: Sprint 2 Integration and Validation
 
 **Branch Name**: `feature/sprint2-integration`
 
@@ -258,9 +325,25 @@ gitGraph
     checkout main
     merge feature/peft-lora-finetuning id: "merge-finetuning"
 
+    branch feature/domain-knowledge-base
+    checkout feature/domain-knowledge-base
+    commit id: "qa-generation"
+    commit id: "knowledge-organization"
+    commit id: "rag-integration"
+    checkout main
+    merge feature/domain-knowledge-base id: "merge-knowledge-base"
+
+    branch feature/practical-lora-finetuning
+    checkout feature/practical-lora-finetuning
+    commit id: "training-data-prep"
+    commit id: "lora-execution"
+    commit id: "validation-integration"
+    checkout main
+    merge feature/practical-lora-finetuning id: "merge-practical-finetuning"
+
     branch feature/dataset-management
     checkout feature/dataset-management
-    commit id: "qa-generation"
+    commit id: "enhanced-qa-generation"
     commit id: "dataset-versioning"
     commit id: "data-augmentation"
     checkout main

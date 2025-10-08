@@ -26,11 +26,15 @@ data/processed/
 # Exception: Allow requirements.txt
 !requirements.txt
 
-# Models
-models/
-*.bin
-*.pth
-*.safetensors
+# Vector database
+chroma_db/
+
+# Model checkpoints and large files (but keep config JSONs and trained adapters)
+model_configs/**/checkpoint-*/**/*.safetensors
+model_configs/**/checkpoint-*/**/*.bin
+model_configs/**/checkpoint-*/**/*.pth
+model_configs/**/checkpoint-*/**/*.pt
+model_configs/**/lora_output/
 
 # MLflow experiment tracking
 mlruns/
@@ -49,4 +53,5 @@ EOF
 
 # Others
 .DS_Store
-notebooks/
+.cache/
+notebooks/test.ipynb

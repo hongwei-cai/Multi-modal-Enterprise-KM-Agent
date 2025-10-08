@@ -5,11 +5,11 @@ This module provides comprehensive experiment tracking capabilities for model
 performance monitoring, A/B testing results, and system optimization experiments.
 """
 
-import json
 import os
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import mlflow
@@ -146,8 +146,19 @@ class MLflowExperimentTracker:
         if tracking_uri is None:
             # Use local SQLite backend
             if database_path is None:
-                database_path = os.path.join(os.getcwd(), "mlruns", "experiments.db")
-            os.makedirs(os.path.dirname(database_path), exist_ok=True)
+                # Use MLRUNS_DIR from environment or default to project root / mlruns
+                mlruns_dir = os.getenv(
+                    "MLRUNS_DIR",
+                    str(Path(__file__).parent.parent.parent.resolve() / "mlruns"),
+                )
+                db_path = Path(mlruns_dir) / "experiments.db"
+                database_path = str(db_path)
+            else:
+                # Extract mlruns_dir from provided database_path
+                db_path = Path(database_path)
+                mlruns_dir = str(db_path.parent)
+            # Ensure the mlruns directory exists
+            os.makedirs(mlruns_dir, exist_ok=True)
             tracking_uri = f"sqlite:///{database_path}"
 
         mlflow.set_tracking_uri(tracking_uri)
@@ -203,23 +214,66 @@ class MLflowExperimentTracker:
 
         return run_id
 
-    def log_metrics(self, run_id: str, metrics: PerformanceMetrics):
+    def log_metrics(self, run_id: str, metrics: PerformanceMetrics, prefix: str = ""):
         """
         Log performance metrics for an experiment run.
 
         Args:
             run_id: Experiment run ID
             metrics: Performance metrics to log
+            prefix: Optional prefix for metric names (e.g., "baseline_", "finetuned_")
         """
         if run_id not in self.active_runs:
             raise ValueError(f"Run ID {run_id} not found in active runs")
 
         # Convert metrics to dict and filter out None values
         metrics_dict = {k: v for k, v in asdict(metrics).items() if v is not None}
+
+        # Add prefix to metric names if provided
+        if prefix:
+            metrics_dict = {f"{prefix}{k}": v for k, v in metrics_dict.items()}
+
         mlflow.log_metrics(metrics_dict, step=0)
 
         # Also log as JSON artifact for structured access
-        self._log_metrics_artifact(run_id, metrics)
+        self._log_metrics_artifact(run_id, metrics, prefix)
+
+    def _log_metrics_artifact(
+        self, run_id: str, metrics: PerformanceMetrics, prefix: str = ""
+    ):
+        """
+        Log metrics as JSON artifact for structured access.
+
+        Args:
+            run_id: Experiment run ID
+            metrics: Performance metrics to log
+            prefix: Optional prefix used in metric names
+        """
+        artifact_name = (
+            f"performance_metrics{'_' + prefix.strip('_') if prefix else ''}.json"
+        )
+        self._log_json_artifact(run_id, asdict(metrics), artifact_name)
+
+    def _log_json_artifact(self, run_id: str, data: Dict[str, Any], artifact_path: str):
+        """
+        Log data as JSON artifact.
+
+        Args:
+            run_id: Experiment run ID
+            data: Data to log as JSON
+            artifact_path: Path for the artifact within the run
+        """
+        import json
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(data, f, indent=2, default=str)
+            temp_path = f.name
+
+        try:
+            mlflow.log_artifact(temp_path, artifact_path)
+        finally:
+            os.unlink(temp_path)
 
     def log_ab_test_result(
         self,
@@ -500,37 +554,6 @@ class MLflowExperimentTracker:
 
         mlflow.log_param("cpu_count", cpu_count)
         mlflow.log_param("total_memory_gb", round(total_memory, 2))
-
-    def _log_metrics_artifact(self, run_id: str, metrics: PerformanceMetrics):
-        """Log metrics as a JSON artifact."""
-        metrics_data = {
-            "metrics": asdict(metrics),
-            "timestamp": datetime.now().isoformat(),
-        }
-        self._log_json_artifact(run_id, metrics_data, "performance_metrics.json")
-
-    def _log_json_artifact(self, run_id: str, data: Dict[str, Any], filename: str):
-        """Log data as a JSON artifact."""
-        # Create temporary file
-        temp_dir = f"/tmp/mlflow_artifacts_{run_id}"
-        os.makedirs(temp_dir, exist_ok=True)
-
-        filepath = os.path.join(temp_dir, filename)
-        os.makedirs(
-            os.path.dirname(filepath), exist_ok=True
-        )  # Ensure parent directories exist
-
-        with open(filepath, "w") as f:
-            json.dump(data, f, indent=2, default=str)
-
-        mlflow.log_artifact(filepath, "")
-
-        # Cleanup
-        try:
-            os.remove(filepath)
-            os.rmdir(temp_dir)
-        except Exception:
-            pass
 
     def create_experiment_version(self, base_experiment: str, version_name: str) -> str:
         """

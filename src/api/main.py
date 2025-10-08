@@ -17,8 +17,7 @@ from pydantic import (  # Add field_validator, remove validator
 )
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.rag.indexing_pipeline import get_indexing_pipeline
-from src.rag.rag_pipeline import get_rag_pipeline
+from src.rag.components import get_indexing_pipeline, get_rag_pipeline
 
 app = FastAPI(
     title="Multi-modal Enterprise KM Agent",
@@ -161,12 +160,12 @@ class AnswerResponse(BaseModel):
 
 # Dependency to get pipelines with configurable DB path
 def get_indexer():
-    db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")  # Default to local path
+    db_path = os.getenv("CHROMA_DB_PATH", "../../chroma_db")  # Default to local path
     return get_indexing_pipeline(db_path=db_path)
 
 
 def get_rag():
-    db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")  # Default to local path
+    db_path = os.getenv("CHROMA_DB_PATH", "../../chroma_db")  # Default to local path
     return get_rag_pipeline(db_path=db_path)
 
 

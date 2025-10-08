@@ -8,7 +8,8 @@ from typing import Any, Dict, Optional
 
 import psutil
 
-from ..config import ABTestConfig, BenchmarkResult
+from configs.model_config import ABTestConfig, BenchmarkResult
+
 from ..experiment_tracker import (
     ExperimentConfig,
     MLflowExperimentTracker,

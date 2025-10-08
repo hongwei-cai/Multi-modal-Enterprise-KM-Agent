@@ -5,7 +5,7 @@ import tempfile
 
 import pytest
 
-from src.rag.indexing_pipeline import get_indexing_pipeline
+from src.rag.components import get_indexing_pipeline
 
 
 @pytest.fixture

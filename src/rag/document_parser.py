@@ -132,3 +132,43 @@ def parse_pdf(file_path: str) -> str:
     """
     parser = PDFParser()
     return parser.extract_text(file_path)
+
+
+def parse_txt(file_path: str) -> str:
+    """
+    Parse a text file.
+
+    Args:
+        file_path: Path to the text file
+
+    Returns:
+        Text content
+
+    Raises:
+        FileNotFoundError: If the text file doesn't exist
+        ValueError: If the file is not a TXT
+    """
+    file_path_obj = Path(file_path)
+
+    # Validate file exists
+    if not file_path_obj.exists():
+        error_msg = f"TXT file not found: {file_path}"
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
+
+    # Validate file is a TXT
+    if file_path_obj.suffix.lower() != ".txt":
+        error_msg = f"File is not a TXT: {file_path}"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    try:
+        logger.info("Reading text file: %s", file_path)
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        logger.info("Successfully read %d characters from %s", len(content), file_path)
+        return content
+    except Exception as e:
+        error_msg = f"Unexpected error reading TXT {file_path}: {str(e)}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg) from e

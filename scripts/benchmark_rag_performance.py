@@ -19,13 +19,12 @@ from pathlib import Path
 from statistics import mean, median, stdev
 from typing import List, Optional
 
+from src.rag.components import get_indexing_pipeline, get_rag_pipeline
 from src.rag.experiment_tracker import (
     ExperimentConfig,
     MLflowExperimentTracker,
     PerformanceMetrics,
 )
-from src.rag.indexing_pipeline import get_indexing_pipeline
-from src.rag.rag_pipeline import get_rag_pipeline
 
 
 @dataclass

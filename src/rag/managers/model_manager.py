@@ -5,6 +5,7 @@ import gc
 import hashlib
 import json
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -15,7 +16,7 @@ from peft import PeftModel
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from ..config import (
+from configs.model_config import (
     ABTestConfig,
     BenchmarkResult,
     LoRAConfig,
@@ -23,6 +24,7 @@ from ..config import (
     ModelTier,
     ModelVersion,
 )
+
 from ..experiment_tracker import (
     ExperimentConfig,
     MLflowExperimentTracker,
@@ -54,7 +56,7 @@ class ModelManager:
 
         self.model_versions: Dict[str, ModelVersion] = {}
         self.current_model: Optional[str] = None
-        self.config_dir = Path("model_configs")
+        self.config_dir = Path(__file__).parent.parent.parent / "model_configs"
         self.config_dir.mkdir(exist_ok=True)
         self._load_model_versions()
 
@@ -62,7 +64,10 @@ class ModelManager:
         self.experiment_tracker = MLflowExperimentTracker()
 
         # Initialize managers
-        self.lora_manager = LoRAManager(cache_dir=self.cache_dir, device=self.device)
+        adapter_base_dir = Path(
+            os.getenv("MODEL_CONFIGS_DIR", str(Path.cwd() / "model_configs"))
+        )
+        self.lora_manager = LoRAManager(cache_dir=adapter_base_dir, device=self.device)
         self.quantization_manager = QuantizationManager()
         self.experiment_manager = ExperimentManager(
             experiment_tracker=self.experiment_tracker
@@ -168,7 +173,7 @@ class ModelManager:
                 model_kwargs = {
                     "cache_dir": str(self.cache_dir / "models"),
                     "low_cpu_mem_usage": True,
-                    "torch_dtype": torch.bfloat16,
+                    "dtype": torch.bfloat16,
                     "device_map": {"": model_device},
                 }
 
@@ -226,7 +231,7 @@ class ModelManager:
                             ModelVersion(
                                 "unknown",
                                 ModelConfig(
-                                    "unknown", ModelTier.FAST, 0.0, 0.0, 0.0, "unknown"
+                                    "unknown", ModelTier.SPEED, 0.0, 0.0, 0.0, "unknown"
                                 ),
                                 time.time(),
                             ),
@@ -363,29 +368,21 @@ class ModelManager:
     def _initialize_model_configs(self) -> Dict[str, ModelConfig]:
         """Initialize model configurations with quality-speed tradeoffs."""
         return {
-            "google/flan-t5-small": ModelConfig(
-                name="google/flan-t5-small",
-                tier=ModelTier.FAST,
-                memory_gb=1.2,
-                latency_ms=60,
-                quality_score=0.7,
-                description="Fast T5 model optimized for QA tasks",
-            ),
-            "google/flan-t5-base": ModelConfig(
-                name="google/flan-t5-base",
-                tier=ModelTier.BALANCED,
-                memory_gb=2.5,
-                latency_ms=100,
-                quality_score=0.85,
-                description="Balanced T5 model with good QA performance",
-            ),
             "microsoft/DialoGPT-small": ModelConfig(
                 name="microsoft/DialoGPT-small",
-                tier=ModelTier.FAST,
+                tier=ModelTier.SPEED,
                 memory_gb=1.0,
                 latency_ms=50,
                 quality_score=0.6,
                 description="Small, fast conversational model",
+            ),
+            "google/flan-t5-small": ModelConfig(
+                name="google/flan-t5-small",
+                tier=ModelTier.SPEED,
+                memory_gb=1.2,
+                latency_ms=60,
+                quality_score=0.7,
+                description="Fast T5 model optimized for QA tasks",
             ),
             "microsoft/DialoGPT-medium": ModelConfig(
                 name="microsoft/DialoGPT-medium",
@@ -394,6 +391,14 @@ class ModelManager:
                 latency_ms=80,
                 quality_score=0.8,
                 description="Balanced conversational model",
+            ),
+            "google/flan-t5-base": ModelConfig(
+                name="google/flan-t5-base",
+                tier=ModelTier.BALANCED,
+                memory_gb=2.5,
+                latency_ms=100,
+                quality_score=0.85,
+                description="Balanced T5 model with good QA performance",
             ),
             "microsoft/DialoGPT-large": ModelConfig(
                 name="microsoft/DialoGPT-large",
@@ -513,7 +518,7 @@ class ModelManager:
     def get_model_recommendation(self, priority: str = "balanced") -> str:
         """Get model recommendation based on priority (speed/quality/balanced)."""
         if priority == "speed":
-            return self.select_model_for_tier(ModelTier.FAST)
+            return self.select_model_for_tier(ModelTier.SPEED)
         elif priority == "quality":
             return self.select_model_for_tier(ModelTier.QUALITY)
         else:  # balanced

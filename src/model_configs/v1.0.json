@@ -1,0 +1,13 @@
+{
+  "name": "v1.0",
+  "config": {
+    "name": "test-model",
+    "tier": "balanced",
+    "memory_gb": 2.0,
+    "latency_ms": 100,
+    "quality_score": 0.8,
+    "description": "Test model description"
+  },
+  "created_at": 1759935476.185107,
+  "performance_metrics": {}
+}

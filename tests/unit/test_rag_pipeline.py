@@ -2,14 +2,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.rag.rag_pipeline import RAGPipeline, get_rag_pipeline
+from src.rag.components import RAGPipeline, get_rag_pipeline
 
 
 @pytest.fixture
 def mock_components():
-    with patch("src.rag.rag_pipeline.get_retriever") as mock_ret, patch(
-        "src.rag.rag_pipeline.get_prompt_template"
-    ) as mock_pt, patch("src.rag.rag_pipeline.get_llm_client") as mock_llm:
+    with patch("src.rag.components.rag_pipeline.get_retriever") as mock_ret, patch(
+        "src.rag.components.rag_pipeline.get_prompt_template"
+    ) as mock_pt, patch("src.rag.components.rag_pipeline.get_llm_client") as mock_llm:
         mock_retriever = MagicMock()
         mock_retriever.retrieve.return_value = [{"document": "Context text"}]
         mock_ret.return_value = mock_retriever
@@ -41,7 +41,7 @@ def test_answer_question(mock_components):
 
 def test_answer_question_no_context(mock_components):
     """Test with no retrieved context."""
-    with patch("src.rag.rag_pipeline.get_retriever") as mock_ret:
+    with patch("src.rag.components.rag_pipeline.get_retriever") as mock_ret:
         mock_retriever = MagicMock()
         mock_retriever.retrieve.return_value = []
         mock_ret.return_value = mock_retriever

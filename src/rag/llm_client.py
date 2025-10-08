@@ -3,8 +3,10 @@ LLM inference client: Local (Transformers) or Cloud (vLLM).
 """
 import logging
 import os
+import time
 from typing import List, Optional
 
+import psutil
 import requests  # type: ignore
 
 from .experiment_tracker import (
@@ -26,7 +28,7 @@ class LLMClient:
         run_id: Optional[str] = None,
     ):
         if model_name is None:
-            model_name = os.getenv("LLM_MODEL_NAME", "gpt2")
+            model_name = os.getenv("LLM_MODEL_NAME", "microsoft/DialoGPT-medium")
         self.model_name = model_name
         self.is_cloud = bool(os.getenv("CLOUD_ENV"))
         self.model_manager = get_model_manager()
@@ -46,7 +48,7 @@ class LLMClient:
             self.quant_type = os.getenv("QUANT_TYPE", "dynamic")
 
             # Use dynamic model selection if no specific model requested
-            if model_name == os.getenv("LLM_MODEL_NAME", "gpt2"):  # Default model
+            if model_name == os.getenv("LLM_MODEL_NAME", "microsoft/DialoGPT-medium"):
                 selected_model = self.model_manager.get_model_recommendation(
                     self.priority
                 )
@@ -89,10 +91,6 @@ class LLMClient:
             raise ValueError("Top-p must be between 0 and 1")
 
         # Track performance
-        import time
-
-        import psutil
-
         start_time = time.time()
         memory_before = psutil.virtual_memory().used / (1024**2)  # MB
 

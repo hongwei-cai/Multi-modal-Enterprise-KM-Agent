@@ -39,20 +39,20 @@ def test_model_switching():
         manager = ModelManager()
 
         # Mock models
-        config1 = ModelConfig("model1", ModelTier.FAST, 1.0, 50, 0.6, "Fast model")
+        config1 = ModelConfig("model1", ModelTier.SPEED, 1.0, 50, 0.6, "Speed model")
         config2 = ModelConfig(
             "model2", ModelTier.QUALITY, 4.0, 200, 0.9, "Quality model"
         )
 
-        manager.save_model_version("fast", config1)
+        manager.save_model_version("speed", config1)
         manager.save_model_version("quality", config2)
 
         # Mock load_model_with_fallback
         with patch.object(manager, "load_model_with_fallback") as mock_load:
             mock_load.return_value = (MagicMock(), MagicMock())
 
-            assert manager.switch_model("fast")
-            assert manager.current_model == "fast"
+            assert manager.switch_model("speed")
+            assert manager.current_model == "speed"
 
             assert manager.switch_model("quality")
             assert manager.current_model == "quality"

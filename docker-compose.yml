@@ -39,7 +39,7 @@ services:
       - VLLM_MODEL_NAME=microsoft/DialoGPT-medium
       - CLOUD_ENV=
       - CHROMA_DB_PATH=http://chromadb:8000  # Internal DNS resolves to service
-      - CHROMA_PERSIST_DIR=./data/processed/chroma_db  # Add this for Docker override
+      - CHROMA_PERSIST_DIR=./chroma_db  # Add this for Docker override
       - USE_QUANTIZATION=true  # Enable quantization for memory optimization
       - QUANT_TYPE=dynamic  # dynamic or static quantization
     volumes:
