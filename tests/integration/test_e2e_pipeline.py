@@ -28,6 +28,8 @@ def set_test_model(monkeypatch):
     """Set a consistent model for integration tests."""
     monkeypatch.setenv("LLM_MODEL_NAME", "google/flan-t5-small")
     monkeypatch.setenv("MODEL_PRIORITY", "balanced")
+    # Override ChromaDB to use local persistence for tests
+    monkeypatch.setenv("CHROMA_DB_PATH", "")
 
 
 def test_full_flow_upload_and_ask(test_pdf_path):
