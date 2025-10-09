@@ -13,6 +13,7 @@ from .benchmark_analyzer import BenchmarkAnalyzer
 from .benchmarking_workflow import BenchmarkingWorkflow, get_benchmarking_workflow
 from .indexing_pipeline import IndexingPipeline
 from .lora_finetuner import LoRAFinetuner
+from .qa_pair_generator import get_qa_generator
 from .rag_pipeline import RAGPipeline
 
 __all__ = [
@@ -25,6 +26,7 @@ __all__ = [
     "LoRAFinetuner",
     "get_indexing_pipeline",
     "get_rag_pipeline",
+    "get_qa_generator",
 ]
 
 

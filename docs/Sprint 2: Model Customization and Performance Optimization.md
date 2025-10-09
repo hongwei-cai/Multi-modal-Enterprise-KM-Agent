@@ -115,7 +115,7 @@ model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
 **Branch Name**: `feature/domain-knowledge-base`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement automated QA pair generation`
+1. **Commit Message**: `feat: implement automated QA pair generation` ✅
    - Create LLM-powered question generation from documents
    - Implement answer extraction and validation
    - Build quality filtering pipeline
@@ -177,7 +177,7 @@ model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
      - Test integration with existing RAG system
      - Document performance gains and limitations
 
-## Story 5: Dataset Creation and Management (原Story 4)
+## Story 5: Dataset Creation and Management
 
 **Branch Name**: `feature/dataset-management`
 
