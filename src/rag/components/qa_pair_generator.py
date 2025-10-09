@@ -47,8 +47,10 @@ class QAPairGenerator:
         embedding_model_name: Optional[str] = None,
         device: Optional[str] = None,
     ):
-        # LLM client (defaults to project default, usually DialoGPT-medium)
-        self.llm = get_llm_client(model_name=llm_model)
+        # For QA generation, use FLAN-T5 which is better at following instructions
+        # Default to flan-t5-base if no specific model requested
+        qa_model = llm_model or "google/flan-t5-base"
+        self.llm = get_llm_client(model_name=qa_model)
 
         # Embedding model (SentenceTransformer)
         self.embedding_model = get_embedding_model()
@@ -63,13 +65,17 @@ class QAPairGenerator:
 
     def _prompt_for_qa(self, passage: str) -> str:
         prompt = (
-            "You are a helpful assistant. Given the passage below, "
-            "generate ONE clear, answerable question and a concise answer "
-            "(1-2 sentences). "
-            "Format the output exactly as:\n"
-            "Question: <question>\n"
-            "Answer: <answer>\n"
-            "Only output the question and answer. Passage:\n\n" + passage
+            f"Extract a key fact or answer from this passage.\n\n"
+            f"Passage: {passage}\n\n"
+            f"Answer:"
+        )
+        return prompt
+
+    def _prompt_for_question(self, passage: str, answer: str) -> str:
+        prompt = (
+            f"Create a question that would be answered by: '{answer}'\n\n"
+            f"Passage context: {passage[:200]}...\n\n"
+            f"Question:"
         )
         return prompt
 
@@ -79,27 +85,90 @@ class QAPairGenerator:
         q = None
         a = None
         try:
-            # Simple parsing: look for lines starting with Question: and Answer:
-            for line in gen_text.splitlines():
-                if line.strip().lower().startswith("question:"):
-                    q = line.split(":", 1)[1].strip()
-                elif line.strip().lower().startswith("answer:"):
-                    a = line.split(":", 1)[1].strip()
+            lines = [line.strip() for line in gen_text.splitlines() if line.strip()]
 
-            # Fallback: if the model returned two lines without labels
-            if q is None or a is None:
-                parts = [part.strip() for part in gen_text.splitlines() if part.strip()]
-                if len(parts) >= 2:
-                    # Assume first is question, second is answer
-                    if q is None:
-                        q = parts[0]
-                    if a is None:
-                        a = parts[1]
+            # Look for Answer: and Question: prefixes (case insensitive)
+            for line in lines:
+                lower_line = line.lower()
+                if lower_line.startswith("answer:") or lower_line.startswith("a:"):
+                    a = line.split(":", 1)[1].strip()
+                elif lower_line.startswith("question:") or lower_line.startswith("q:"):
+                    q = line.split(":", 1)[1].strip()
+
+            # If we found both, return them
+            if q and a:
+                return q, a
+
+            # Fallback 1: Try to extract from single line with both markers
+            text = gen_text.strip()
+            if "answer:" in text.lower() and "question:" in text.lower():
+                # Extract answer first
+                answer_part = text.lower().split("answer:")[1]
+                if "question:" in answer_part.lower():
+                    a = answer_part.lower().split("question:")[0].strip()
+                    q = answer_part.lower().split("question:")[1].strip()
+                    return q, a
+
+            # Fallback 2: If only answer found, try to generate question from it
+            if a and not q:
+                # This is tricky - for now, skip this pair
+                return None, None
+
+            # Fallback 3: If only question found, use default answer
+            if q and not a:
+                a = "See passage for answer."
+                return q, a
 
         except Exception:
-            return None, None
+            pass
 
-        return q, a
+        return None, None
+
+    def _extract_answer_from_generation(self, gen_text: str) -> Optional[str]:
+        """Extract answer from LLM generation."""
+        try:
+            # Clean up the generation
+            text = gen_text.strip()
+
+            # Remove common prefixes that might be generated
+            prefixes_to_remove = ["Answer:", "answer:", "A:", "a:"]
+            for prefix in prefixes_to_remove:
+                if text.lower().startswith(prefix.lower()):
+                    text = text[len(prefix) :].strip()
+                    break
+
+            # If the answer is too short or too long, skip
+            if len(text) < 2 or len(text) > 200:
+                return None
+
+            return text
+        except Exception:
+            return None
+
+    def _extract_question_from_generation(self, gen_text: str) -> Optional[str]:
+        """Extract question from LLM generation."""
+        try:
+            # Clean up the generation
+            text = gen_text.strip()
+
+            # Remove common prefixes that might be generated
+            prefixes_to_remove = ["Question:", "question:", "Q:", "q:"]
+            for prefix in prefixes_to_remove:
+                if text.lower().startswith(prefix.lower()):
+                    text = text[len(prefix) :].strip()
+                    break
+
+            # Ensure it ends with a question mark
+            if not text.endswith("?"):
+                text += "?"
+
+            # If the question is too short or too long, skip
+            if len(text) < 5 or len(text) > 200:
+                return None
+
+            return text
+        except Exception:
+            return None
 
     def _validate_pair(
         self, question: str, answer: str, passage: str, relevance_threshold: float
@@ -162,6 +231,10 @@ class QAPairGenerator:
             for file_path in file_paths:
                 try:
                     text = self._parse_file(file_path)
+                    logger.info(f"Parsed {file_path}: {len(text)} characters")
+                    if len(text) < 200:
+                        logger.info(f"Skipping {file_path}: too short")
+                        continue
                 except Exception as e:
                     logger.warning("Skipping %s: %s", file_path, e)
                     continue
@@ -170,6 +243,7 @@ class QAPairGenerator:
                     chunk_size=chunk_size, overlap=overlap, strategy="sentences"
                 )
                 chunks = chunker.chunk_text(text)
+                logger.info(f"Chunked {file_path}: {len(chunks)} chunks")
                 if not chunks:
                     continue
 
@@ -183,17 +257,36 @@ class QAPairGenerator:
 
                     # Generate up to max_q_per_chunk questions per chunk
                     for _ in range(max_q_per_chunk):
-                        prompt = self._prompt_for_qa(chunk)
-                        gen = self.llm.generate(
-                            prompt=prompt, max_length=128, temperature=0.7, top_p=0.9
+                        # Step 1: Generate an answer from the passage
+                        answer_prompt = self._prompt_for_qa(chunk)
+                        answer_gen = self.llm.generate(
+                            prompt=answer_prompt,
+                            max_length=128,
+                            temperature=0.7,
+                            top_p=0.9,
                         )
-                        question, answer = self._extract_qa_from_generation(gen)
-                        if not question or not answer:
+                        answer = self._extract_answer_from_generation(answer_gen)
+
+                        if not answer or len(answer.strip()) < 3:
+                            continue
+
+                        # Step 2: Generate a question for the answer
+                        question_prompt = self._prompt_for_question(chunk, answer)
+                        question_gen = self.llm.generate(
+                            prompt=question_prompt,
+                            max_length=128,
+                            temperature=0.7,
+                            top_p=0.9,
+                        )
+                        question = self._extract_question_from_generation(question_gen)
+
+                        if not question or len(question.strip()) < 5:
                             continue
 
                         ok, meta = self._validate_pair(
                             question, answer, chunk, relevance_threshold
                         )
+
                         record = {
                             "file_path": file_path,
                             "chunk_index": idx,
