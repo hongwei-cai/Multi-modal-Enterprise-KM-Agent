@@ -21,16 +21,20 @@ class Retriever:
     def __init__(
         self,
         db_path: Optional[str] = None,
+        collection_name: str = "documents",
         top_k: int = 5,
         experiment_tracker=None,
         run_id: Optional[str] = None,
     ):
         self.db = get_vector_db(db_path=db_path)
+        self.collection_name = collection_name
         self.embedding_model = get_embedding_model()
         self.top_k = top_k
         self.experiment_tracker = experiment_tracker
         self.run_id = run_id
-        self.db.create_collection("documents")  # Ensure collection exists
+        self.db.create_collection(collection_name)  # Ensure collection exists
+
+        logger.info("Retriever initialized with collection: %s", collection_name)
 
     def retrieve(self, query: str, top_k: Optional[int] = None) -> List[Dict[str, Any]]:
         """
@@ -85,8 +89,10 @@ class Retriever:
             )
 
         logger.info(
-            f"Retrieved {len(retrieved_docs)} documents for\
-                query: {query[:50]}... (latency: {retrieval_latency_ms:.2f}ms)"
+            "Retrieved %d documents for query: %s... (latency: %.2fms)",
+            len(retrieved_docs),
+            query[:50],
+            retrieval_latency_ms,
         )
         return retrieved_docs
 

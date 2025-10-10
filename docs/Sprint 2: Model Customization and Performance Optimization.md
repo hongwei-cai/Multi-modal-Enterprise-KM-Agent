@@ -134,7 +134,7 @@ model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
      - Ensure no data leakage between splits
      - Create dataset statistics and quality reports
 
-3. **Commit Message**: `feat: integrate knowledge base with RAG system`
+3. **Commit Message**: `feat: integrate knowledge base with RAG system` ✅
    - Update ChromaDB with new domain knowledge
    - Create baseline evaluation on hotpotqa_dev
    - Implement knowledge base update pipeline

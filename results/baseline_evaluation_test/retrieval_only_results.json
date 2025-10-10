@@ -1,0 +1,1888 @@
+{
+  "evaluation_config": {
+    "model": "microsoft/DialoGPT-medium",
+    "knowledge_base_collection": "knowledge_base",
+    "eval_dataset": "data/processed/test_auto_topics/test.jsonl",
+    "eval_samples": 26
+  },
+  "retrieval_metrics": {
+    "total_queries": 26,
+    "avg_retrieval_time": 0.03699643795306866,
+    "retrieval_success_rate": 1.0,
+    "k": 5,
+    "results": [
+      {
+        "query": "What is the main idea of the passage?",
+        "retrieval_time": 0.19489622116088867,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the main idea of the passage?\nAnswer: there is a strong vintage aircraft movement in the uk",
+            "metadata": {
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_832.txt",
+              "answer": "there is a strong vintage aircraft movement in the uk",
+              "relevance_score": 0.7219178343951562,
+              "accepted": true,
+              "question": "What is the main idea of the passage?",
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What is the main inspiration for the title of the novel?\nAnswer: the novel 's title is taken from the popular dominican merengue mataron al chivo",
+            "metadata": {
+              "relevance_score": 0.6922222566779467,
+              "type": "qa_combined",
+              "accepted": true,
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_1171.txt",
+              "version": "kb_v1_c627d49b",
+              "question": "What is the main inspiration for the title of the novel?",
+              "answer": "the novel 's title is taken from the popular dominican merengue mataron al chivo"
+            }
+          },
+          {
+            "document": "Question: What was the synagogue facing west?\nAnswer: the synagogue occupied the greater part of the plot, facing west.",
+            "metadata": {
+              "answer": "the synagogue occupied the greater part of the plot, facing west.",
+              "accepted": true,
+              "chunk_index": 0,
+              "question": "What was the synagogue facing west?",
+              "relevance_score": 0.571803320136713,
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_1597.txt"
+            }
+          },
+          {
+            "document": "Question: What did king want to do with the song?\nAnswer: king has always wanted to play \" behind the crooked cross \" because it 's got a cool intro",
+            "metadata": {
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.607435578509906,
+              "file_path": "data/raw/wikitext/article_779.txt",
+              "answer": "king has always wanted to play \" behind the crooked cross \" because it 's got a cool intro",
+              "type": "qa_combined",
+              "accepted": true,
+              "question": "What did king want to do with the song?"
+            }
+          },
+          {
+            "document": "Question: What do we know about the Fifth Commandment?\nAnswer: the fifth commandment forbids suicide and the mercy killing of those who are dying",
+            "metadata": {
+              "question": "What do we know about the Fifth Commandment?",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "chunk_index": 0,
+              "answer": "the fifth commandment forbids suicide and the mercy killing of those who are dying",
+              "relevance_score": 0.7558642709669842,
+              "file_path": "data/raw/wikitext/article_4924.txt",
+              "type": "qa_combined"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What are the five classes?",
+        "retrieval_time": 0.07431411743164062,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What do we know about the Fifth Commandment?\nAnswer: the fifth commandment forbids suicide and the mercy killing of those who are dying",
+            "metadata": {
+              "accepted": true,
+              "type": "qa_combined",
+              "relevance_score": 0.7558642709669842,
+              "answer": "the fifth commandment forbids suicide and the mercy killing of those who are dying",
+              "version": "kb_v1_c627d49b",
+              "question": "What do we know about the Fifth Commandment?",
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_4924.txt"
+            }
+          },
+          {
+            "document": "Question: What did he do after he became a lecturer?\nAnswer: he obtained a post as the keeper of archaeology at the national museum of wales",
+            "metadata": {
+              "chunk_index": 0,
+              "accepted": true,
+              "type": "qa_combined",
+              "relevance_score": 0.6128203083108795,
+              "question": "What did he do after he became a lecturer?",
+              "answer": "he obtained a post as the keeper of archaeology at the national museum of wales",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_3163.txt"
+            }
+          },
+          {
+            "document": "Question: What type of characteristics are attributed to the crania keith examined?\nAnswer: keith had suggested that the crania he examined displayed similar features, which he attributed to the different individuals belonging to \" one family - or several families united by common descent",
+            "metadata": {
+              "answer": "keith had suggested that the crania he examined displayed similar features, which he attributed to the different individuals belonging to \" one family - or several families united by common descent",
+              "accepted": true,
+              "relevance_score": 0.8467366294400757,
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_2090.txt",
+              "question": "What type of characteristics are attributed to the crania keith examined?",
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What is the most common type of enone?\nAnswer: sulfoxonium reagents",
+            "metadata": {
+              "chunk_index": 0,
+              "question": "What is the most common type of enone?",
+              "file_path": "data/raw/wikitext/article_1083.txt",
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.5515690358283601,
+              "type": "qa_combined",
+              "answer": "sulfoxonium reagents"
+            }
+          },
+          {
+            "document": "Question: What two states were the 5th, 6th, 7th, and 8th arkansas infantry regiments mustered in june 1861?\nAnswer: the 5th, 6th, 7th, and 8th arkansas infantry regiments, mustered in june, 1861, were issued m1816 / m1822. 69 caliber flintlocks",
+            "metadata": {
+              "question": "What two states were the 5th, 6th, 7th, and 8th arkansas infantry regiments mustered in june 1861?",
+              "answer": "the 5th, 6th, 7th, and 8th arkansas infantry regiments, mustered in june, 1861, were issued m1816 / m1822. 69 caliber flintlocks",
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.885178537888774,
+              "accepted": true,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_84.txt",
+              "chunk_index": 0
+            }
+          }
+        ]
+      },
+      {
+        "query": "Which of the following is a possible reason for the controversy that surrounded Finkelstein's research?",
+        "retrieval_time": 0.05961799621582031,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the name of the israeli attorney that Finkelstein spoke to?\nAnswer: finkelstein was questioned after his arrival at Ben Gurion airport near Tel Aviv and detained for 24 hours in a holding cell.",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_4652.txt",
+              "accepted": true,
+              "question": "What is the name of the israeli attorney that Finkelstein spoke to?",
+              "answer": "finkelstein was questioned after his arrival at Ben Gurion airport near Tel Aviv and detained for 24 hours in a holding cell.",
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "relevance_score": 0.7686322488079375
+            }
+          },
+          {
+            "document": "Question: How many years after he left Hunter College did he end up teaching?\nAnswer: finkelstein left hunter college in 2001, \" after his teaching load and salary were reduced \" by the college administration.",
+            "metadata": {
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "answer": "finkelstein left hunter college in 2001, \" after his teaching load and salary were reduced \" by the college administration.",
+              "question": "How many years after he left Hunter College did he end up teaching?",
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_4586.txt",
+              "relevance_score": 0.9355859505431324
+            }
+          },
+          {
+            "document": "Question: What is the main purpose of this article?\nAnswer: women footballers leave the continent to seek greater opportunity in europe or the united states",
+            "metadata": {
+              "relevance_score": 0.7303502706526038,
+              "answer": "women footballers leave the continent to seek greater opportunity in europe or the united states",
+              "question": "What is the main purpose of this article?",
+              "type": "qa_combined",
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_283.txt"
+            }
+          },
+          {
+            "document": "Question: What was the profession of Polish journalists and writers virtually eliminated from?\nAnswer: under german occupation, the professions of polish journalists and writers were virtually eliminated, as they had little opportunity to publish their work",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.6176316499810064,
+              "chunk_index": 0,
+              "accepted": true,
+              "answer": "under german occupation, the professions of polish journalists and writers were virtually eliminated, as they had little opportunity to publish their work",
+              "question": "What was the profession of Polish journalists and writers virtually eliminated from?",
+              "file_path": "data/raw/wikitext/article_1935.txt",
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What happened in Poland after the Berlin Wall?\nAnswer: the infrastructure of Poland 's educational and research institutions and 14 % of its museums had been destroyed",
+            "metadata": {
+              "accepted": true,
+              "type": "qa_combined",
+              "relevance_score": 0.7851860602212152,
+              "version": "kb_v1_c627d49b",
+              "answer": "the infrastructure of Poland 's educational and research institutions and 14 % of its museums had been destroyed",
+              "question": "What happened in Poland after the Berlin Wall?",
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_1887.txt"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What does thakur use to injure gabbar?",
+        "retrieval_time": 0.04049396514892578,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the probable relationship between thakur and sanjeev kumar?\nAnswer: thakur baldev singh ( sanjeev kumar ) summons a pair of small @ - @ time thieves that he had once arrested.",
+            "metadata": {
+              "accepted": true,
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "question": "What is the probable relationship between thakur and sanjeev kumar?",
+              "file_path": "data/raw/wikitext/article_2386.txt",
+              "chunk_index": 0,
+              "relevance_score": 0.7235836972876486,
+              "answer": "thakur baldev singh ( sanjeev kumar ) summons a pair of small @ - @ time thieves that he had once arrested."
+            }
+          },
+          {
+            "document": "Question: Who is a part of the image of the trimurti?\nAnswer: the image is highly damaged, particularly the lower half of shiva seen seated with parvati, who is shown with four arms, two of which are broken",
+            "metadata": {
+              "chunk_index": 0,
+              "accepted": true,
+              "type": "qa_combined",
+              "answer": "the image is highly damaged, particularly the lower half of shiva seen seated with parvati, who is shown with four arms, two of which are broken",
+              "question": "Who is a part of the image of the trimurti?",
+              "file_path": "data/raw/wikitext/article_1444.txt",
+              "relevance_score": 0.6779617518039064,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: Which of the following is not a characteristic of barker?\nAnswer: barker worked principally in watercolor with pen @ - @ and @ - @ ink, but she was equally competent in black @ - @ and @ - @ white, in oils, and in pastels.",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_176.txt",
+              "question": "Which of the following is not a characteristic of barker?",
+              "relevance_score": 0.8764387553006024,
+              "accepted": true,
+              "answer": "barker worked principally in watercolor with pen @ - @ and @ - @ ink, but she was equally competent in black @ - @ and @ - @ white, in oils, and in pastels."
+            }
+          },
+          {
+            "document": "Question: What happened to Nicole?\nAnswer: geoff arrived and saved her from danger",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_3769.txt",
+              "accepted": true,
+              "relevance_score": 0.6380831980510363,
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "answer": "geoff arrived and saved her from danger",
+              "version": "kb_v1_c627d49b",
+              "question": "What happened to Nicole?"
+            }
+          },
+          {
+            "document": "Question: Which happened first, Barker's funeral or Barker's death?\nAnswer: barker died at worthing hospital on 16 february 1973, aged 77 years.",
+            "metadata": {
+              "question": "Which happened first, Barker's funeral or Barker's death?",
+              "type": "qa_combined",
+              "answer": "barker died at worthing hospital on 16 february 1973, aged 77 years.",
+              "chunk_index": 0,
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.7739560575402142,
+              "file_path": "data/raw/wikitext/article_172.txt"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What is the most important event in the history of the sun god?",
+        "retrieval_time": 0.05547022819519043,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the most important event in the history of the sun god?\nAnswer: the sun god is also said to grow old during his daily journey across the sky, sink into the duat at night, and emerge as a young child at dawn.",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_668.txt",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "relevance_score": 0.6296075298776855,
+              "answer": "the sun god is also said to grow old during his daily journey across the sky, sink into the duat at night, and emerge as a young child at dawn.",
+              "question": "What is the most important event in the history of the sun god?"
+            }
+          },
+          {
+            "document": "Question: What was the name of the first God?\nAnswer: contact between the human and divine realms was mostly limited to specific circumstances",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "question": "What was the name of the first God?",
+              "answer": "contact between the human and divine realms was mostly limited to specific circumstances",
+              "accepted": true,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_724.txt",
+              "chunk_index": 0,
+              "relevance_score": 0.6351950158719947
+            }
+          },
+          {
+            "document": "Question: Who did hornung believe was the dominant god in Egypt?\nAnswer: the one god was especially equated with amun, the dominant god in the late new kingdom, whereas for the rest of egyptian history the universal deity could be identified with many other gods",
+            "metadata": {
+              "relevance_score": 0.786692069178797,
+              "question": "Who did hornung believe was the dominant god in Egypt?",
+              "file_path": "data/raw/wikitext/article_704.txt",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "answer": "the one god was especially equated with amun, the dominant god in the late new kingdom, whereas for the rest of egyptian history the universal deity could be identified with many other gods",
+              "chunk_index": 0,
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What does the sabbath refer to?\nAnswer: the lord ' s day",
+            "metadata": {
+              "type": "qa_combined",
+              "answer": "the lord ' s day",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_4873.txt",
+              "chunk_index": 0,
+              "question": "What does the sabbath refer to?",
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.6055395110954405
+            }
+          },
+          {
+            "document": "Question: What does egyptian text state about misfortune?\nAnswer: misfortune was often seen as a product of isfet, the cosmic disorder that was the opposite of maat, and therefore the gods were not guilty of causing evil events.",
+            "metadata": {
+              "accepted": true,
+              "relevance_score": 0.7392224666690644,
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "question": "What does egyptian text state about misfortune?",
+              "answer": "misfortune was often seen as a product of isfet, the cosmic disorder that was the opposite of maat, and therefore the gods were not guilty of causing evil events.",
+              "file_path": "data/raw/wikitext/article_734.txt",
+              "version": "kb_v1_c627d49b"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What is the name of the movie fernandez appeared opposite Deshmukh in?",
+        "retrieval_time": 0.03641510009765625,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the name of the movie fernandez appeared opposite Deshmukh in?\nAnswer: fernandez appeared opposite deshmukh in the science fiction romantic comedy jaane kahan se aayi hai",
+            "metadata": {
+              "type": "qa_combined",
+              "question": "What is the name of the movie fernandez appeared opposite Deshmukh in?",
+              "answer": "fernandez appeared opposite deshmukh in the science fiction romantic comedy jaane kahan se aayi hai",
+              "relevance_score": 0.685743137163044,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_524.txt",
+              "chunk_index": 0,
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: What is the most common movie that fernandez appeared in?\nAnswer: fernandez featured in vicky singh ' s roy, a romantic thriller, which critic sarita a. tanwar described as a \" boring, exhausting and pretentious \" film",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "accepted": true,
+              "chunk_index": 0,
+              "question": "What is the most common movie that fernandez appeared in?",
+              "file_path": "data/raw/wikitext/article_531.txt",
+              "answer": "fernandez featured in vicky singh ' s roy, a romantic thriller, which critic sarita a. tanwar described as a \" boring, exhausting and pretentious \" film",
+              "relevance_score": 0.6963500554713827
+            }
+          },
+          {
+            "document": "Question: What is the name of the film that was shot in ramanagara?\nAnswer: sholay is the highest grossing indian film of all time, adjusted for inflation",
+            "metadata": {
+              "relevance_score": 0.6998275842871144,
+              "type": "qa_combined",
+              "accepted": true,
+              "question": "What is the name of the film that was shot in ramanagara?",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "answer": "sholay is the highest grossing indian film of all time, adjusted for inflation",
+              "file_path": "data/raw/wikitext/article_2381.txt"
+            }
+          },
+          {
+            "document": "Question: Which actress worked on a movie script for Paramount Pictures?\nAnswer: fey worked on a movie script for paramount pictures, which was to feature sacha baron cohen, by the name of curly oxide and vic thrill, based loosely on the true story of a hasidic rock musician.",
+            "metadata": {
+              "type": "qa_combined",
+              "question": "Which actress worked on a movie script for Paramount Pictures?",
+              "relevance_score": 0.732791954272501,
+              "answer": "fey worked on a movie script for paramount pictures, which was to feature sacha baron cohen, by the name of curly oxide and vic thrill, based loosely on the true story of a hasidic rock musician.",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_1315.txt",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What is the main inspiration for the title of the novel?\nAnswer: the novel 's title is taken from the popular dominican merengue mataron al chivo",
+            "metadata": {
+              "answer": "the novel 's title is taken from the popular dominican merengue mataron al chivo",
+              "file_path": "data/raw/wikitext/article_1171.txt",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "question": "What is the main inspiration for the title of the novel?",
+              "relevance_score": 0.6922222566779467
+            }
+          }
+        ]
+      },
+      {
+        "query": "What is the highest school district in Galveston?",
+        "retrieval_time": 0.016006946563720703,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the highest school district in Galveston?\nAnswer: the city of galveston is served by galveston independent school district",
+            "metadata": {
+              "relevance_score": 0.8508658554551771,
+              "question": "What is the highest school district in Galveston?",
+              "type": "qa_combined",
+              "answer": "the city of galveston is served by galveston independent school district",
+              "file_path": "data/raw/wikitext/article_4414.txt",
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: Which company is the oldest operating company for the Galveston Railway?\nAnswer: intercity bus service to galveston was previously operated by kerrville bus company",
+            "metadata": {
+              "relevance_score": 0.7453186467971396,
+              "chunk_index": 0,
+              "accepted": true,
+              "answer": "intercity bus service to galveston was previously operated by kerrville bus company",
+              "question": "Which company is the oldest operating company for the Galveston Railway?",
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_4400.txt",
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What is one of the buildings in Galveston?\nAnswer: Galveston contains one of the largest and historically significant collections of 19th @ - @ century buildings in the united states.",
+            "metadata": {
+              "type": "qa_combined",
+              "accepted": true,
+              "answer": "Galveston contains one of the largest and historically significant collections of 19th @ - @ century buildings in the united states.",
+              "question": "What is one of the buildings in Galveston?",
+              "file_path": "data/raw/wikitext/article_4350.txt",
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.9391940383069196,
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What is the first thing you can see in Niagara?\nAnswer: sarnia ' s fresh @ - @ cut fries are another popular tourist attraction, and thousands of visitors annually visit the chip trucks",
+            "metadata": {
+              "type": "qa_combined",
+              "question": "What is the first thing you can see in Niagara?",
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "answer": "sarnia ' s fresh @ - @ cut fries are another popular tourist attraction, and thousands of visitors annually visit the chip trucks",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_4520.txt",
+              "relevance_score": 0.7498830027784762
+            }
+          },
+          {
+            "document": "Question: What two states were the 5th, 6th, 7th, and 8th arkansas infantry regiments mustered in june 1861?\nAnswer: the 5th, 6th, 7th, and 8th arkansas infantry regiments, mustered in june, 1861, were issued m1816 / m1822. 69 caliber flintlocks",
+            "metadata": {
+              "accepted": true,
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_84.txt",
+              "version": "kb_v1_c627d49b",
+              "question": "What two states were the 5th, 6th, 7th, and 8th arkansas infantry regiments mustered in june 1861?",
+              "relevance_score": 0.885178537888774,
+              "type": "qa_combined",
+              "answer": "the 5th, 6th, 7th, and 8th arkansas infantry regiments, mustered in june, 1861, were issued m1816 / m1822. 69 caliber flintlocks"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What did Ali sign?",
+        "retrieval_time": 0.05246424674987793,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What did Ali sign?\nAnswer: ali performed under contract throughout europe and at times for heads of state",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "relevance_score": 0.5703020690187173,
+              "chunk_index": 0,
+              "question": "What did Ali sign?",
+              "answer": "ali performed under contract throughout europe and at times for heads of state",
+              "file_path": "data/raw/wikitext/article_2690.txt",
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: What event happened in the 3rd quarter of 2007?\nAnswer: aot 's court case against king power, the operator of duty @ - @ free shops within suvarnabhumi airport.",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "question": "What event happened in the 3rd quarter of 2007?",
+              "chunk_index": 0,
+              "answer": "aot 's court case against king power, the operator of duty @ - @ free shops within suvarnabhumi airport.",
+              "relevance_score": 0.6549770474127775,
+              "type": "qa_combined",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_2622.txt"
+            }
+          },
+          {
+            "document": "Question: Which of the following is not a characteristic of barker?\nAnswer: barker worked principally in watercolor with pen @ - @ and @ - @ ink, but she was equally competent in black @ - @ and @ - @ white, in oils, and in pastels.",
+            "metadata": {
+              "chunk_index": 0,
+              "relevance_score": 0.8764387553006024,
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "question": "Which of the following is not a characteristic of barker?",
+              "file_path": "data/raw/wikitext/article_176.txt",
+              "answer": "barker worked principally in watercolor with pen @ - @ and @ - @ ink, but she was equally competent in black @ - @ and @ - @ white, in oils, and in pastels."
+            }
+          },
+          {
+            "document": "Question: Which happened first, Barker's funeral or Barker's death?\nAnswer: barker died at worthing hospital on 16 february 1973, aged 77 years.",
+            "metadata": {
+              "relevance_score": 0.7739560575402142,
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_172.txt",
+              "accepted": true,
+              "type": "qa_combined",
+              "question": "Which happened first, Barker's funeral or Barker's death?",
+              "answer": "barker died at worthing hospital on 16 february 1973, aged 77 years."
+            }
+          },
+          {
+            "document": "Question: What did king want to do with the song?\nAnswer: king has always wanted to play \" behind the crooked cross \" because it 's got a cool intro",
+            "metadata": {
+              "question": "What did king want to do with the song?",
+              "relevance_score": 0.607435578509906,
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "answer": "king has always wanted to play \" behind the crooked cross \" because it 's got a cool intro",
+              "file_path": "data/raw/wikitext/article_779.txt",
+              "version": "kb_v1_c627d49b",
+              "accepted": true
+            }
+          }
+        ]
+      },
+      {
+        "query": "Which of the following is not a historical monument: an altar or an altar?",
+        "retrieval_time": 0.013007164001464844,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: Which of the following is not a historical monument: an altar or an altar?\nAnswer: a ruler known as jaguar bird peccary is represented on a 6th @ - @ century stela, which describes him acceding to the throne in 568.",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_3846.txt",
+              "accepted": true,
+              "question": "Which of the following is not a historical monument: an altar or an altar?",
+              "answer": "a ruler known as jaguar bird peccary is represented on a 6th @ - @ century stela, which describes him acceding to the throne in 568.",
+              "relevance_score": 0.8639900170630475,
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What is the name of the person who dedicated the monument?\nAnswer: monument 141 is a very well preserved hieroglyphic panel carved from fine grained white limestone with almost the whole inscription intact",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_3915.txt",
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.809832631602108,
+              "chunk_index": 0,
+              "question": "What is the name of the person who dedicated the monument?",
+              "type": "qa_combined",
+              "accepted": true,
+              "answer": "monument 141 is a very well preserved hieroglyphic panel carved from fine grained white limestone with almost the whole inscription intact"
+            }
+          },
+          {
+            "document": "Question: what was the first temple sanctuaries constructed?\nAnswer: the egyptians enclosed temple sanctuaries and greatly restricted access to them",
+            "metadata": {
+              "question": "what was the first temple sanctuaries constructed?",
+              "relevance_score": 0.7557049263569546,
+              "file_path": "data/raw/wikitext/article_727.txt",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "answer": "the egyptians enclosed temple sanctuaries and greatly restricted access to them",
+              "accepted": true,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What is the name of the person that dedicated monument 7?\nAnswer: monument 7 is carved from yellow sandstone and has suffered only minor damage.",
+            "metadata": {
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "answer": "monument 7 is carved from yellow sandstone and has suffered only minor damage.",
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_3905.txt",
+              "question": "What is the name of the person that dedicated monument 7?",
+              "relevance_score": 0.725377741043532,
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: What is the longest recorded period of time in Egypt?\nAnswer: the earliest known temples appeared in the last centuries of the predynastic era, along with images that resemble the iconographies of known deities",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_644.txt",
+              "type": "qa_combined",
+              "relevance_score": 0.7957928658921819,
+              "accepted": true,
+              "answer": "the earliest known temples appeared in the last centuries of the predynastic era, along with images that resemble the iconographies of known deities",
+              "chunk_index": 0,
+              "question": "What is the longest recorded period of time in Egypt?",
+              "version": "kb_v1_c627d49b"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What is the most common type of enone?",
+        "retrieval_time": 0.043289899826049805,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the most common type of enone?\nAnswer: sulfoxonium reagents",
+            "metadata": {
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_1083.txt",
+              "question": "What is the most common type of enone?",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "relevance_score": 0.5515690358283601,
+              "answer": "sulfoxonium reagents",
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What type of groups can enantioselectivity be determined by a chemical reaction?\nAnswer: the size of the groups can also influence diastereoselectivity in alicyclic substrates",
+            "metadata": {
+              "relevance_score": 0.6048544462300446,
+              "accepted": true,
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_1070.txt",
+              "version": "kb_v1_c627d49b",
+              "question": "What type of groups can enantioselectivity be determined by a chemical reaction?",
+              "answer": "the size of the groups can also influence diastereoselectivity in alicyclic substrates",
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: Which species is a hygrometricus species?\nAnswer: a 2010 study identified a japanese species, previously identified as a. hygrometricus, as genetically distinct",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_3310.txt",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "answer": "a 2010 study identified a japanese species, previously identified as a. hygrometricus, as genetically distinct",
+              "question": "Which species is a hygrometricus species?",
+              "accepted": true,
+              "relevance_score": 0.7857138095907001,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What type of characteristics are attributed to the crania keith examined?\nAnswer: keith had suggested that the crania he examined displayed similar features, which he attributed to the different individuals belonging to \" one family - or several families united by common descent",
+            "metadata": {
+              "type": "qa_combined",
+              "accepted": true,
+              "chunk_index": 0,
+              "relevance_score": 0.8467366294400757,
+              "answer": "keith had suggested that the crania he examined displayed similar features, which he attributed to the different individuals belonging to \" one family - or several families united by common descent",
+              "question": "What type of characteristics are attributed to the crania keith examined?",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_2090.txt"
+            }
+          },
+          {
+            "document": "Question: What type of compounds are used in making flame @ - @ proofing compounds?\nAnswer: antimony is mainly used as its trioxide in making flame @ - @ proofing compounds",
+            "metadata": {
+              "question": "What type of compounds are used in making flame @ - @ proofing compounds?",
+              "relevance_score": 0.7602071071336189,
+              "chunk_index": 0,
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_3098.txt",
+              "answer": "antimony is mainly used as its trioxide in making flame @ - @ proofing compounds",
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What was the name of the team lynn was hired by?",
+        "retrieval_time": 0.016638994216918945,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What was the name of the team lynn was hired by?\nAnswer: lynn was hired by ross after he was offered a salary of $ 12 @, @ 000",
+            "metadata": {
+              "relevance_score": 0.6261862714137555,
+              "answer": "lynn was hired by ross after he was offered a salary of $ 12 @, @ 000",
+              "question": "What was the name of the team lynn was hired by?",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_3609.txt"
+            }
+          },
+          {
+            "document": "Question: What team did Joe nathan play for in the 2008 season?\nAnswer: nathan was traded to the minnesota twins and became their closer",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_3477.txt",
+              "chunk_index": 0,
+              "relevance_score": 0.641880221455429,
+              "question": "What team did Joe nathan play for in the 2008 season?",
+              "accepted": true,
+              "type": "qa_combined",
+              "answer": "nathan was traded to the minnesota twins and became their closer"
+            }
+          },
+          {
+            "document": "Question: What band did townsend lead?\nAnswer: devin townsend project",
+            "metadata": {
+              "relevance_score": 0.5826065261689339,
+              "accepted": true,
+              "question": "What band did townsend lead?",
+              "chunk_index": 0,
+              "answer": "devin townsend project",
+              "file_path": "data/raw/wikitext/article_1491.txt",
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What was the name of the team that was playing the game?\nAnswer: the Coyotes despite a franchise @ - @ record 54 shots on goal",
+            "metadata": {
+              "relevance_score": 0.552911258903892,
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_345.txt",
+              "answer": "the Coyotes despite a franchise @ - @ record 54 shots on goal",
+              "type": "qa_combined",
+              "question": "What was the name of the team that was playing the game?",
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What team did Cullen play for in the ihl 's cleveland lumberjacks?\nAnswer: cullen appeared in four of the lightning ' s first eight games, but it was evident that he had lost much of his speed and strength",
+            "metadata": {
+              "question": "What team did Cullen play for in the ihl 's cleveland lumberjacks?",
+              "answer": "cullen appeared in four of the lightning ' s first eight games, but it was evident that he had lost much of his speed and strength",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_586.txt",
+              "relevance_score": 0.7237044239127485,
+              "accepted": true,
+              "type": "qa_combined"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What year did the first coin issue of the United States commemorative coins begin?",
+        "retrieval_time": 0.041033029556274414,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What year did the first coin issue of the United States commemorative coins begin?\nAnswer: gold dollar had a brief resurrection during the period of early united states commemorative coins",
+            "metadata": {
+              "question": "What year did the first coin issue of the United States commemorative coins begin?",
+              "file_path": "data/raw/wikitext/article_1035.txt",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "type": "qa_combined",
+              "relevance_score": 0.8345195474820927,
+              "answer": "gold dollar had a brief resurrection during the period of early united states commemorative coins",
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: How many dollars did Joe Nathan give to the Suny/Stoney Brook Athletics Department?\nAnswer: in august 2008, he gave the suny / stony brook athletics department $ 500 @, @ 000 for a new baseball facility.",
+            "metadata": {
+              "question": "How many dollars did Joe Nathan give to the Suny/Stoney Brook Athletics Department?",
+              "relevance_score": 0.8137149028317416,
+              "file_path": "data/raw/wikitext/article_3487.txt",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "answer": "in august 2008, he gave the suny / stony brook athletics department $ 500 @, @ 000 for a new baseball facility.",
+              "type": "qa_combined",
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What was the name of the team that was playing the game?\nAnswer: the Coyotes despite a franchise @ - @ record 54 shots on goal",
+            "metadata": {
+              "relevance_score": 0.552911258903892,
+              "question": "What was the name of the team that was playing the game?",
+              "file_path": "data/raw/wikitext/article_345.txt",
+              "type": "qa_combined",
+              "accepted": true,
+              "answer": "the Coyotes despite a franchise @ - @ record 54 shots on goal",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What was the journal known as?\nAnswer: wheeler established a new archaeological journal, ancient india",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "question": "What was the journal known as?",
+              "type": "qa_combined",
+              "answer": "wheeler established a new archaeological journal, ancient india",
+              "file_path": "data/raw/wikitext/article_3199.txt",
+              "accepted": true,
+              "chunk_index": 0,
+              "relevance_score": 0.656730050117211
+            }
+          },
+          {
+            "document": "Question: What is the first reversibility observed?\nAnswer: initial addition of the ylide results in a betaine with adjacent charges",
+            "metadata": {
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_1051.txt",
+              "answer": "initial addition of the ylide results in a betaine with adjacent charges",
+              "accepted": true,
+              "type": "qa_combined",
+              "question": "What is the first reversibility observed?",
+              "relevance_score": 0.5874005986646321,
+              "version": "kb_v1_c627d49b"
+            }
+          }
+        ]
+      },
+      {
+        "query": "How many nba first team designations did jordan have?",
+        "retrieval_time": 0.009536981582641602,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: How many nba first team designations did jordan have?\nAnswer: jordan is a two @ - @ time inductee into the basketball hall of fame",
+            "metadata": {
+              "question": "How many nba first team designations did jordan have?",
+              "relevance_score": 0.7184627386221706,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_1714.txt",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "answer": "jordan is a two @ - @ time inductee into the basketball hall of fame"
+            }
+          },
+          {
+            "document": "Question: Which team had a high point during the 1989 \u2013 90 season?\nAnswer: the bulls entered the 1989 \u2013 90 season as a team on the rise",
+            "metadata": {
+              "question": "Which team had a high point during the 1989 \u2013 90 season?",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "answer": "the bulls entered the 1989 \u2013 90 season as a team on the rise",
+              "accepted": true,
+              "relevance_score": 0.7670296002169436,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_1745.txt"
+            }
+          },
+          {
+            "document": "Question: What was the name of the team that was playing the game?\nAnswer: the Coyotes despite a franchise @ - @ record 54 shots on goal",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_345.txt",
+              "relevance_score": 0.552911258903892,
+              "answer": "the Coyotes despite a franchise @ - @ record 54 shots on goal",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "accepted": true,
+              "question": "What was the name of the team that was playing the game?"
+            }
+          },
+          {
+            "document": "Question: What team did Cullen play for in the ihl 's cleveland lumberjacks?\nAnswer: cullen appeared in four of the lightning ' s first eight games, but it was evident that he had lost much of his speed and strength",
+            "metadata": {
+              "chunk_index": 0,
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_586.txt",
+              "version": "kb_v1_c627d49b",
+              "question": "What team did Cullen play for in the ihl 's cleveland lumberjacks?",
+              "answer": "cullen appeared in four of the lightning ' s first eight games, but it was evident that he had lost much of his speed and strength",
+              "relevance_score": 0.7237044239127485,
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What was the name of the team lynn was hired by?\nAnswer: lynn was hired by ross after he was offered a salary of $ 12 @, @ 000",
+            "metadata": {
+              "answer": "lynn was hired by ross after he was offered a salary of $ 12 @, @ 000",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_3609.txt",
+              "relevance_score": 0.6261862714137555,
+              "question": "What was the name of the team lynn was hired by?"
+            }
+          }
+        ]
+      },
+      {
+        "query": "Which company is the oldest operating company for the Galveston Railway?",
+        "retrieval_time": 0.009209156036376953,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: Which company is the oldest operating company for the Galveston Railway?\nAnswer: intercity bus service to galveston was previously operated by kerrville bus company",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_4400.txt",
+              "chunk_index": 0,
+              "relevance_score": 0.7453186467971396,
+              "answer": "intercity bus service to galveston was previously operated by kerrville bus company",
+              "accepted": true,
+              "question": "Which company is the oldest operating company for the Galveston Railway?",
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What is one of the buildings in Galveston?\nAnswer: Galveston contains one of the largest and historically significant collections of 19th @ - @ century buildings in the united states.",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "answer": "Galveston contains one of the largest and historically significant collections of 19th @ - @ century buildings in the united states.",
+              "relevance_score": 0.9391940383069196,
+              "accepted": true,
+              "question": "What is one of the buildings in Galveston?",
+              "file_path": "data/raw/wikitext/article_4350.txt"
+            }
+          },
+          {
+            "document": "Question: What is the highest school district in Galveston?\nAnswer: the city of galveston is served by galveston independent school district",
+            "metadata": {
+              "answer": "the city of galveston is served by galveston independent school district",
+              "accepted": true,
+              "relevance_score": 0.8508658554551771,
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_4414.txt",
+              "question": "What is the highest school district in Galveston?"
+            }
+          },
+          {
+            "document": "Question: What is the first thing you can see in Niagara?\nAnswer: sarnia ' s fresh @ - @ cut fries are another popular tourist attraction, and thousands of visitors annually visit the chip trucks",
+            "metadata": {
+              "answer": "sarnia ' s fresh @ - @ cut fries are another popular tourist attraction, and thousands of visitors annually visit the chip trucks",
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_4520.txt",
+              "accepted": true,
+              "type": "qa_combined",
+              "question": "What is the first thing you can see in Niagara?",
+              "relevance_score": 0.7498830027784762
+            }
+          },
+          {
+            "document": "Question: What was the name of the German ship that was the third in line?\nAnswer: markgraf was the third ship in the german line, behind her sisters konig and grosser kurfurst and followed by kronprinz",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_2008.txt",
+              "chunk_index": 0,
+              "relevance_score": 0.6106342735037232,
+              "question": "What was the name of the German ship that was the third in line?",
+              "answer": "markgraf was the third ship in the german line, behind her sisters konig and grosser kurfurst and followed by kronprinz",
+              "type": "qa_combined"
+            }
+          }
+        ]
+      },
+      {
+        "query": "Which actress worked on a movie script for Paramount Pictures?",
+        "retrieval_time": 0.046112775802612305,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: Which actress worked on a movie script for Paramount Pictures?\nAnswer: fey worked on a movie script for paramount pictures, which was to feature sacha baron cohen, by the name of curly oxide and vic thrill, based loosely on the true story of a hasidic rock musician.",
+            "metadata": {
+              "accepted": true,
+              "answer": "fey worked on a movie script for paramount pictures, which was to feature sacha baron cohen, by the name of curly oxide and vic thrill, based loosely on the true story of a hasidic rock musician.",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "question": "Which actress worked on a movie script for Paramount Pictures?",
+              "relevance_score": 0.732791954272501,
+              "file_path": "data/raw/wikitext/article_1315.txt",
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What is the name of the film that was shot in ramanagara?\nAnswer: sholay is the highest grossing indian film of all time, adjusted for inflation",
+            "metadata": {
+              "type": "qa_combined",
+              "accepted": true,
+              "chunk_index": 0,
+              "question": "What is the name of the film that was shot in ramanagara?",
+              "answer": "sholay is the highest grossing indian film of all time, adjusted for inflation",
+              "file_path": "data/raw/wikitext/article_2381.txt",
+              "relevance_score": 0.6998275842871144,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What was the name of the director of the series that livin ' the dream was based on?\nAnswer: \"livin ' the dream \" was written by story editor niki schwartz @ - @ wright, marking her second writing credit for the series, after the earlier season episode \" lice \".",
+            "metadata": {
+              "answer": "\"livin ' the dream \" was written by story editor niki schwartz @ - @ wright, marking her second writing credit for the series, after the earlier season episode \" lice \".",
+              "relevance_score": 0.6689533287902878,
+              "question": "What was the name of the director of the series that livin ' the dream was based on?",
+              "file_path": "data/raw/wikitext/article_3805.txt",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: Who is the character in fey?\nAnswer: fey has a scar a few inches long on the left side of her chin and cheek",
+            "metadata": {
+              "relevance_score": 0.771689010252471,
+              "answer": "fey has a scar a few inches long on the left side of her chin and cheek",
+              "type": "qa_combined",
+              "question": "Who is the character in fey?",
+              "file_path": "data/raw/wikitext/article_1362.txt",
+              "accepted": true,
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What is the name of the movie fernandez appeared opposite Deshmukh in?\nAnswer: fernandez appeared opposite deshmukh in the science fiction romantic comedy jaane kahan se aayi hai",
+            "metadata": {
+              "type": "qa_combined",
+              "question": "What is the name of the movie fernandez appeared opposite Deshmukh in?",
+              "chunk_index": 0,
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_524.txt",
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.685743137163044,
+              "answer": "fernandez appeared opposite deshmukh in the science fiction romantic comedy jaane kahan se aayi hai"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What did he do after he became a lecturer?",
+        "retrieval_time": 0.010654211044311523,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What did he do after he became a lecturer?\nAnswer: he obtained a post as the keeper of archaeology at the national museum of wales",
+            "metadata": {
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.6128203083108795,
+              "answer": "he obtained a post as the keeper of archaeology at the national museum of wales",
+              "file_path": "data/raw/wikitext/article_3163.txt",
+              "question": "What did he do after he became a lecturer?",
+              "accepted": true,
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: How many years after he left Hunter College did he end up teaching?\nAnswer: finkelstein left hunter college in 2001, \" after his teaching load and salary were reduced \" by the college administration.",
+            "metadata": {
+              "answer": "finkelstein left hunter college in 2001, \" after his teaching load and salary were reduced \" by the college administration.",
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "chunk_index": 0,
+              "question": "How many years after he left Hunter College did he end up teaching?",
+              "relevance_score": 0.9355859505431324,
+              "file_path": "data/raw/wikitext/article_4586.txt"
+            }
+          },
+          {
+            "document": "Question: What was the profession of Polish journalists and writers virtually eliminated from?\nAnswer: under german occupation, the professions of polish journalists and writers were virtually eliminated, as they had little opportunity to publish their work",
+            "metadata": {
+              "relevance_score": 0.6176316499810064,
+              "question": "What was the profession of Polish journalists and writers virtually eliminated from?",
+              "chunk_index": 0,
+              "answer": "under german occupation, the professions of polish journalists and writers were virtually eliminated, as they had little opportunity to publish their work",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_1935.txt",
+              "accepted": true,
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: Which happened first, Barker's funeral or Barker's death?\nAnswer: barker died at worthing hospital on 16 february 1973, aged 77 years.",
+            "metadata": {
+              "accepted": true,
+              "question": "Which happened first, Barker's funeral or Barker's death?",
+              "answer": "barker died at worthing hospital on 16 february 1973, aged 77 years.",
+              "relevance_score": 0.7739560575402142,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_172.txt",
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What did Ali sign?\nAnswer: ali performed under contract throughout europe and at times for heads of state",
+            "metadata": {
+              "type": "qa_combined",
+              "question": "What did Ali sign?",
+              "answer": "ali performed under contract throughout europe and at times for heads of state",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_2690.txt",
+              "relevance_score": 0.5703020690187173,
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0
+            }
+          }
+        ]
+      },
+      {
+        "query": "What happened to Nicole?",
+        "retrieval_time": 0.015816211700439453,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What happened to Nicole?\nAnswer: geoff arrived and saved her from danger",
+            "metadata": {
+              "accepted": true,
+              "relevance_score": 0.6380831980510363,
+              "question": "What happened to Nicole?",
+              "answer": "geoff arrived and saved her from danger",
+              "file_path": "data/raw/wikitext/article_3769.txt",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What two people did anderson date?\nAnswer: anderson dated (and frequently collaborated with ) singer fiona apple",
+            "metadata": {
+              "chunk_index": 0,
+              "question": "What two people did anderson date?",
+              "relevance_score": 0.7632239953357202,
+              "accepted": true,
+              "type": "qa_combined",
+              "answer": "anderson dated (and frequently collaborated with ) singer fiona apple",
+              "file_path": "data/raw/wikitext/article_3433.txt",
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: Who is the character in fey?\nAnswer: fey has a scar a few inches long on the left side of her chin and cheek",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "question": "Who is the character in fey?",
+              "relevance_score": 0.771689010252471,
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "answer": "fey has a scar a few inches long on the left side of her chin and cheek",
+              "file_path": "data/raw/wikitext/article_1362.txt",
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: What happened to krasnyi kavkaz when he disembarked from feodosiya?\nAnswer: krasnyi kavkaz sailed into the harbor of feodosiya on 29 december 1941",
+            "metadata": {
+              "chunk_index": 0,
+              "question": "What happened to krasnyi kavkaz when he disembarked from feodosiya?",
+              "relevance_score": 0.6480589513942147,
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "accepted": true,
+              "answer": "krasnyi kavkaz sailed into the harbor of feodosiya on 29 december 1941",
+              "file_path": "data/raw/wikitext/article_2148.txt"
+            }
+          },
+          {
+            "document": "Question: What team did Joe nathan play for in the 2008 season?\nAnswer: nathan was traded to the minnesota twins and became their closer",
+            "metadata": {
+              "accepted": true,
+              "chunk_index": 0,
+              "relevance_score": 0.641880221455429,
+              "question": "What team did Joe nathan play for in the 2008 season?",
+              "file_path": "data/raw/wikitext/article_3477.txt",
+              "type": "qa_combined",
+              "answer": "nathan was traded to the minnesota twins and became their closer",
+              "version": "kb_v1_c627d49b"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What was the name of the German ship that was the third in line?",
+        "retrieval_time": 0.014988899230957031,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What was the name of the German ship that was the third in line?\nAnswer: markgraf was the third ship in the german line, behind her sisters konig and grosser kurfurst and followed by kronprinz",
+            "metadata": {
+              "relevance_score": 0.6106342735037232,
+              "accepted": true,
+              "type": "qa_combined",
+              "answer": "markgraf was the third ship in the german line, behind her sisters konig and grosser kurfurst and followed by kronprinz",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_2008.txt",
+              "question": "What was the name of the German ship that was the third in line?"
+            }
+          },
+          {
+            "document": "Question: What was the name of the battle that Max was involved in?\nAnswer: erzherzog ferdinand max was in the iii division of the austrian @ - @ hungarian battle @ - @ fleet",
+            "metadata": {
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "question": "What was the name of the battle that Max was involved in?",
+              "answer": "erzherzog ferdinand max was in the iii division of the austrian @ - @ hungarian battle @ - @ fleet",
+              "relevance_score": 0.7754881283508422,
+              "file_path": "data/raw/wikitext/article_623.txt"
+            }
+          },
+          {
+            "document": "Question: How many battleships did the zrinyi serve with?\nAnswer: shelled senigallia as part of the bombardment of the key seaport of ancona, italy, during may 1915",
+            "metadata": {
+              "chunk_index": 0,
+              "question": "How many battleships did the zrinyi serve with?",
+              "relevance_score": 0.6892493777653762,
+              "answer": "shelled senigallia as part of the bombardment of the key seaport of ancona, italy, during may 1915",
+              "type": "qa_combined",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_916.txt",
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What year was the ship that was built by the thames iron works in london launched?\nAnswer: vasco da gama was a central battery ironclad which entered service with the portuguese navy in 1876, serving until 1935.",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "accepted": true,
+              "question": "What year was the ship that was built by the thames iron works in london launched?",
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_3719.txt",
+              "relevance_score": 0.8897800246931897,
+              "answer": "vasco da gama was a central battery ironclad which entered service with the portuguese navy in 1876, serving until 1935."
+            }
+          },
+          {
+            "document": "Question: What is the main idea of the passage?\nAnswer: there is a strong vintage aircraft movement in the uk",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_832.txt",
+              "relevance_score": 0.7219178343951562,
+              "answer": "there is a strong vintage aircraft movement in the uk",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "question": "What is the main idea of the passage?"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What do the Catholic Church considers all sexual acts outside of marriage?",
+        "retrieval_time": 0.040960073471069336,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What do the Catholic Church considers all sexual acts outside of marriage?\nAnswer: the catholic church considers all sexual acts outside of marriage to be grave sins.",
+            "metadata": {
+              "accepted": true,
+              "answer": "the catholic church considers all sexual acts outside of marriage to be grave sins.",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "question": "What do the Catholic Church considers all sexual acts outside of marriage?",
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.8819982282176336,
+              "file_path": "data/raw/wikitext/article_4956.txt"
+            }
+          },
+          {
+            "document": "Question: What is the most common way that a person's sin is described?\nAnswer: direct and intentional killing of an innocent human is considered a mortal sin",
+            "metadata": {
+              "relevance_score": 0.7074202930729374,
+              "file_path": "data/raw/wikitext/article_4913.txt",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "question": "What is the most common way that a person's sin is described?",
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "answer": "direct and intentional killing of an innocent human is considered a mortal sin"
+            }
+          },
+          {
+            "document": "Question: What do we know about the Fifth Commandment?\nAnswer: the fifth commandment forbids suicide and the mercy killing of those who are dying",
+            "metadata": {
+              "type": "qa_combined",
+              "answer": "the fifth commandment forbids suicide and the mercy killing of those who are dying",
+              "question": "What do we know about the Fifth Commandment?",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_4924.txt",
+              "accepted": true,
+              "relevance_score": 0.7558642709669842
+            }
+          },
+          {
+            "document": "Question: What does the sabbath refer to?\nAnswer: the lord ' s day",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_4873.txt",
+              "chunk_index": 0,
+              "question": "What does the sabbath refer to?",
+              "type": "qa_combined",
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.6055395110954405,
+              "answer": "the lord ' s day"
+            }
+          },
+          {
+            "document": "Question: What is the core of respect for human life?\nAnswer: respect for one ' s own body",
+            "metadata": {
+              "relevance_score": 0.6306364501698318,
+              "question": "What is the core of respect for human life?",
+              "type": "qa_combined",
+              "accepted": true,
+              "answer": "respect for one ' s own body",
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_4933.txt"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What was the name of the battle that Max was involved in?",
+        "retrieval_time": 0.009456157684326172,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What was the name of the battle that Max was involved in?\nAnswer: erzherzog ferdinand max was in the iii division of the austrian @ - @ hungarian battle @ - @ fleet",
+            "metadata": {
+              "accepted": true,
+              "question": "What was the name of the battle that Max was involved in?",
+              "relevance_score": 0.7754881283508422,
+              "answer": "erzherzog ferdinand max was in the iii division of the austrian @ - @ hungarian battle @ - @ fleet",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_623.txt"
+            }
+          },
+          {
+            "document": "Question: Which happened first, the Battle of Tellicherry or the Battle of Mysore War?\nAnswer: the battle of tellicherry was a naval action fought off the indian port of tellicherry between british and french warships on 18 november 1791 during the third anglo @ - @ mysore war.",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "relevance_score": 0.9453637899824822,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_2714.txt",
+              "answer": "the battle of tellicherry was a naval action fought off the indian port of tellicherry between british and french warships on 18 november 1791 during the third anglo @ - @ mysore war.",
+              "chunk_index": 0,
+              "question": "Which happened first, the Battle of Tellicherry or the Battle of Mysore War?"
+            }
+          },
+          {
+            "document": "Question: What was the main battery number?\nAnswer: she was also equipped with a single 5 @. @ 9 in ( 150 mm ) gun mounted on her stern, and four 9 @ - @ pounder guns for close @ - @ range defense against torpedo boats",
+            "metadata": {
+              "accepted": true,
+              "question": "What was the main battery number?",
+              "file_path": "data/raw/wikitext/article_3724.txt",
+              "answer": "she was also equipped with a single 5 @. @ 9 in ( 150 mm ) gun mounted on her stern, and four 9 @ - @ pounder guns for close @ - @ range defense against torpedo boats",
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.5920412149125042,
+              "chunk_index": 0,
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What was the name of the German ship that was the third in line?\nAnswer: markgraf was the third ship in the german line, behind her sisters konig and grosser kurfurst and followed by kronprinz",
+            "metadata": {
+              "question": "What was the name of the German ship that was the third in line?",
+              "answer": "markgraf was the third ship in the german line, behind her sisters konig and grosser kurfurst and followed by kronprinz",
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "relevance_score": 0.6106342735037232,
+              "file_path": "data/raw/wikitext/article_2008.txt",
+              "chunk_index": 0,
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: What was the synagogue facing west?\nAnswer: the synagogue occupied the greater part of the plot, facing west.",
+            "metadata": {
+              "question": "What was the synagogue facing west?",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_1597.txt",
+              "answer": "the synagogue occupied the greater part of the plot, facing west.",
+              "relevance_score": 0.571803320136713,
+              "version": "kb_v1_c627d49b",
+              "accepted": true
+            }
+          }
+        ]
+      },
+      {
+        "query": "What were the reasons for the trip?",
+        "retrieval_time": 0.04326295852661133,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the main idea of the passage?\nAnswer: there is a strong vintage aircraft movement in the uk",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "question": "What is the main idea of the passage?",
+              "file_path": "data/raw/wikitext/article_832.txt",
+              "accepted": true,
+              "answer": "there is a strong vintage aircraft movement in the uk",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "relevance_score": 0.7219178343951562
+            }
+          },
+          {
+            "document": "Question: What happened to krasnyi kavkaz when he disembarked from feodosiya?\nAnswer: krasnyi kavkaz sailed into the harbor of feodosiya on 29 december 1941",
+            "metadata": {
+              "question": "What happened to krasnyi kavkaz when he disembarked from feodosiya?",
+              "chunk_index": 0,
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_2148.txt",
+              "answer": "krasnyi kavkaz sailed into the harbor of feodosiya on 29 december 1941",
+              "type": "qa_combined",
+              "relevance_score": 0.6480589513942147,
+              "version": "kb_v1_c627d49b"
+            }
+          },
+          {
+            "document": "Question: What happened after the uygurs arrived in guangdong?\nAnswer: a small group of uyghurs arrived on 2 may, and workers at the factory remarked that relations between the two groups deteriorated as the number of uyghurs increased",
+            "metadata": {
+              "chunk_index": 0,
+              "answer": "a small group of uyghurs arrived on 2 may, and workers at the factory remarked that relations between the two groups deteriorated as the number of uyghurs increased",
+              "version": "kb_v1_c627d49b",
+              "question": "What happened after the uygurs arrived in guangdong?",
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_4207.txt",
+              "relevance_score": 0.5729148969059298,
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: What caused the influx of new customers to Las Vegas?\nAnswer: increasing enforcement of gambling laws and the growth of las vegas, nevada as a competitive center of gambling and entertainment put pressure on the gaming industry on the island",
+            "metadata": {
+              "accepted": true,
+              "relevance_score": 0.5708342030303405,
+              "chunk_index": 0,
+              "question": "What caused the influx of new customers to Las Vegas?",
+              "answer": "increasing enforcement of gambling laws and the growth of las vegas, nevada as a competitive center of gambling and entertainment put pressure on the gaming industry on the island",
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_4261.txt"
+            }
+          },
+          {
+            "document": "Question: What is the main purpose of this article?\nAnswer: women footballers leave the continent to seek greater opportunity in europe or the united states",
+            "metadata": {
+              "chunk_index": 0,
+              "answer": "women footballers leave the continent to seek greater opportunity in europe or the united states",
+              "relevance_score": 0.7303502706526038,
+              "question": "What is the main purpose of this article?",
+              "type": "qa_combined",
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_283.txt"
+            }
+          }
+        ]
+      },
+      {
+        "query": "Who wrote the song \" there ' s got to be a way \"?",
+        "retrieval_time": 0.014978885650634766,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What band did townsend lead?\nAnswer: devin townsend project",
+            "metadata": {
+              "type": "qa_combined",
+              "answer": "devin townsend project",
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_1491.txt",
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "question": "What band did townsend lead?",
+              "relevance_score": 0.5826065261689339
+            }
+          },
+          {
+            "document": "Question: What did king want to do with the song?\nAnswer: king has always wanted to play \" behind the crooked cross \" because it 's got a cool intro",
+            "metadata": {
+              "chunk_index": 0,
+              "accepted": true,
+              "question": "What did king want to do with the song?",
+              "file_path": "data/raw/wikitext/article_779.txt",
+              "answer": "king has always wanted to play \" behind the crooked cross \" because it 's got a cool intro",
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "relevance_score": 0.607435578509906
+            }
+          },
+          {
+            "document": "Question: What album did townsend channelled his new @ - @ found control and sobriety into?\nAnswer: ki, the first album of the devin townsend project tetralogy was written to \"set the stage \" for the subsequent albums",
+            "metadata": {
+              "type": "qa_combined",
+              "relevance_score": 0.8372729348096865,
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_1533.txt",
+              "version": "kb_v1_c627d49b",
+              "question": "What album did townsend channelled his new @ - @ found control and sobriety into?",
+              "answer": "ki, the first album of the devin townsend project tetralogy was written to \"set the stage \" for the subsequent albums",
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: What label did townsend record a noisescapes demo for?\nAnswer: townsend recorded a noisescapes demo and sent copies to various record labels",
+            "metadata": {
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "question": "What label did townsend record a noisescapes demo for?",
+              "file_path": "data/raw/wikitext/article_1500.txt",
+              "accepted": true,
+              "relevance_score": 0.6355371053900277,
+              "answer": "townsend recorded a noisescapes demo and sent copies to various record labels",
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What was the name of the director of the series that livin ' the dream was based on?\nAnswer: \"livin ' the dream \" was written by story editor niki schwartz @ - @ wright, marking her second writing credit for the series, after the earlier season episode \" lice \".",
+            "metadata": {
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_3805.txt",
+              "version": "kb_v1_c627d49b",
+              "question": "What was the name of the director of the series that livin ' the dream was based on?",
+              "type": "qa_combined",
+              "answer": "\"livin ' the dream \" was written by story editor niki schwartz @ - @ wright, marking her second writing credit for the series, after the earlier season episode \" lice \".",
+              "chunk_index": 0,
+              "relevance_score": 0.6689533287902878
+            }
+          }
+        ]
+      },
+      {
+        "query": "What is the name of the person that dedicated monument 7?",
+        "retrieval_time": 0.011230945587158203,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What is the name of the person that dedicated monument 7?\nAnswer: monument 7 is carved from yellow sandstone and has suffered only minor damage.",
+            "metadata": {
+              "chunk_index": 0,
+              "relevance_score": 0.725377741043532,
+              "question": "What is the name of the person that dedicated monument 7?",
+              "type": "qa_combined",
+              "accepted": true,
+              "answer": "monument 7 is carved from yellow sandstone and has suffered only minor damage.",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_3905.txt"
+            }
+          },
+          {
+            "document": "Question: What is the name of the person who dedicated the monument?\nAnswer: monument 141 is a very well preserved hieroglyphic panel carved from fine grained white limestone with almost the whole inscription intact",
+            "metadata": {
+              "question": "What is the name of the person who dedicated the monument?",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "relevance_score": 0.809832631602108,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_3915.txt",
+              "answer": "monument 141 is a very well preserved hieroglyphic panel carved from fine grained white limestone with almost the whole inscription intact",
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: Which of the following is not a historical monument: an altar or an altar?\nAnswer: a ruler known as jaguar bird peccary is represented on a 6th @ - @ century stela, which describes him acceding to the throne in 568.",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.8639900170630475,
+              "chunk_index": 0,
+              "question": "Which of the following is not a historical monument: an altar or an altar?",
+              "accepted": true,
+              "type": "qa_combined",
+              "answer": "a ruler known as jaguar bird peccary is represented on a 6th @ - @ century stela, which describes him acceding to the throne in 568.",
+              "file_path": "data/raw/wikitext/article_3846.txt"
+            }
+          },
+          {
+            "document": "Question: What did he do after he became a lecturer?\nAnswer: he obtained a post as the keeper of archaeology at the national museum of wales",
+            "metadata": {
+              "accepted": true,
+              "type": "qa_combined",
+              "question": "What did he do after he became a lecturer?",
+              "file_path": "data/raw/wikitext/article_3163.txt",
+              "chunk_index": 0,
+              "answer": "he obtained a post as the keeper of archaeology at the national museum of wales",
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.6128203083108795
+            }
+          },
+          {
+            "document": "Question: what was the first temple sanctuaries constructed?\nAnswer: the egyptians enclosed temple sanctuaries and greatly restricted access to them",
+            "metadata": {
+              "file_path": "data/raw/wikitext/article_727.txt",
+              "answer": "the egyptians enclosed temple sanctuaries and greatly restricted access to them",
+              "type": "qa_combined",
+              "accepted": true,
+              "relevance_score": 0.7557049263569546,
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "question": "what was the first temple sanctuaries constructed?"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What does the sabbath refer to?",
+        "retrieval_time": 0.04585909843444824,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What does the sabbath refer to?\nAnswer: the lord ' s day",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "file_path": "data/raw/wikitext/article_4873.txt",
+              "relevance_score": 0.6055395110954405,
+              "answer": "the lord ' s day",
+              "question": "What does the sabbath refer to?",
+              "accepted": true,
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What is the most important event in the history of the sun god?\nAnswer: the sun god is also said to grow old during his daily journey across the sky, sink into the duat at night, and emerge as a young child at dawn.",
+            "metadata": {
+              "type": "qa_combined",
+              "accepted": true,
+              "relevance_score": 0.6296075298776855,
+              "version": "kb_v1_c627d49b",
+              "question": "What is the most important event in the history of the sun god?",
+              "answer": "the sun god is also said to grow old during his daily journey across the sky, sink into the duat at night, and emerge as a young child at dawn.",
+              "file_path": "data/raw/wikitext/article_668.txt",
+              "chunk_index": 0
+            }
+          },
+          {
+            "document": "Question: What do we know about the Fifth Commandment?\nAnswer: the fifth commandment forbids suicide and the mercy killing of those who are dying",
+            "metadata": {
+              "answer": "the fifth commandment forbids suicide and the mercy killing of those who are dying",
+              "question": "What do we know about the Fifth Commandment?",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "accepted": true,
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.7558642709669842,
+              "file_path": "data/raw/wikitext/article_4924.txt"
+            }
+          },
+          {
+            "document": "Question: What do the Catholic Church considers all sexual acts outside of marriage?\nAnswer: the catholic church considers all sexual acts outside of marriage to be grave sins.",
+            "metadata": {
+              "chunk_index": 0,
+              "answer": "the catholic church considers all sexual acts outside of marriage to be grave sins.",
+              "question": "What do the Catholic Church considers all sexual acts outside of marriage?",
+              "relevance_score": 0.8819982282176336,
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_4956.txt",
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What does the term \"deities\" refer to?\nAnswer: deities ' diverse appearances in art",
+            "metadata": {
+              "relevance_score": 0.7226534443317132,
+              "answer": "deities ' diverse appearances in art",
+              "file_path": "data/raw/wikitext/article_631.txt",
+              "question": "What does the term \"deities\" refer to?",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "accepted": true
+            }
+          }
+        ]
+      },
+      {
+        "query": "How many years did it take the Polish people to finally realize their fate?",
+        "retrieval_time": 0.010239124298095703,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: How many years did it take the Polish people to finally realize their fate?\nAnswer: Poles were allowed back into those museums that now supported german propaganda and indoctrination, such as the newly created chopin museum",
+            "metadata": {
+              "version": "kb_v1_c627d49b",
+              "relevance_score": 0.6970886473524903,
+              "answer": "Poles were allowed back into those museums that now supported german propaganda and indoctrination, such as the newly created chopin museum",
+              "type": "qa_combined",
+              "accepted": true,
+              "chunk_index": 0,
+              "file_path": "data/raw/wikitext/article_1878.txt",
+              "question": "How many years did it take the Polish people to finally realize their fate?"
+            }
+          },
+          {
+            "document": "Question: What was the profession of Polish journalists and writers virtually eliminated from?\nAnswer: under german occupation, the professions of polish journalists and writers were virtually eliminated, as they had little opportunity to publish their work",
+            "metadata": {
+              "question": "What was the profession of Polish journalists and writers virtually eliminated from?",
+              "file_path": "data/raw/wikitext/article_1935.txt",
+              "chunk_index": 0,
+              "accepted": true,
+              "answer": "under german occupation, the professions of polish journalists and writers were virtually eliminated, as they had little opportunity to publish their work",
+              "relevance_score": 0.6176316499810064,
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What happened in Poland after the Berlin Wall?\nAnswer: the infrastructure of Poland 's educational and research institutions and 14 % of its museums had been destroyed",
+            "metadata": {
+              "chunk_index": 0,
+              "relevance_score": 0.7851860602212152,
+              "question": "What happened in Poland after the Berlin Wall?",
+              "answer": "the infrastructure of Poland 's educational and research institutions and 14 % of its museums had been destroyed",
+              "accepted": true,
+              "type": "qa_combined",
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_1887.txt"
+            }
+          },
+          {
+            "document": "Question: Who was a Polish artist?\nAnswer: there were artists who performed for the polish forces in the west as well as for the polish forces in the east.",
+            "metadata": {
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_1950.txt",
+              "relevance_score": 0.6384198887302955,
+              "chunk_index": 0,
+              "question": "Who was a Polish artist?",
+              "version": "kb_v1_c627d49b",
+              "type": "qa_combined",
+              "answer": "there were artists who performed for the polish forces in the west as well as for the polish forces in the east."
+            }
+          },
+          {
+            "document": "Question: Which event happened first, the nazi invasion of poland or the soviet union occupying Poland?\nAnswer: subsequently poland was partitioned again \u2013 between these two powers \u2013 and remained under occupation for most of the war",
+            "metadata": {
+              "question": "Which event happened first, the nazi invasion of poland or the soviet union occupying Poland?",
+              "file_path": "data/raw/wikitext/article_1865.txt",
+              "chunk_index": 0,
+              "relevance_score": 0.6829701231657318,
+              "accepted": true,
+              "type": "qa_combined",
+              "answer": "subsequently poland was partitioned again \u2013 between these two powers \u2013 and remained under occupation for most of the war",
+              "version": "kb_v1_c627d49b"
+            }
+          }
+        ]
+      },
+      {
+        "query": "What album did townsend channelled his new @ - @ found control and sobriety into?",
+        "retrieval_time": 0.03595399856567383,
+        "num_results": 5,
+        "results": [
+          {
+            "document": "Question: What album did townsend channelled his new @ - @ found control and sobriety into?\nAnswer: ki, the first album of the devin townsend project tetralogy was written to \"set the stage \" for the subsequent albums",
+            "metadata": {
+              "question": "What album did townsend channelled his new @ - @ found control and sobriety into?",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_1533.txt",
+              "version": "kb_v1_c627d49b",
+              "chunk_index": 0,
+              "type": "qa_combined",
+              "relevance_score": 0.8372729348096865,
+              "answer": "ki, the first album of the devin townsend project tetralogy was written to \"set the stage \" for the subsequent albums"
+            }
+          },
+          {
+            "document": "Question: What band did townsend lead?\nAnswer: devin townsend project",
+            "metadata": {
+              "relevance_score": 0.5826065261689339,
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "file_path": "data/raw/wikitext/article_1491.txt",
+              "answer": "devin townsend project",
+              "question": "What band did townsend lead?",
+              "accepted": true
+            }
+          },
+          {
+            "document": "Question: What label did townsend record a noisescapes demo for?\nAnswer: townsend recorded a noisescapes demo and sent copies to various record labels",
+            "metadata": {
+              "chunk_index": 0,
+              "relevance_score": 0.6355371053900277,
+              "version": "kb_v1_c627d49b",
+              "answer": "townsend recorded a noisescapes demo and sent copies to various record labels",
+              "accepted": true,
+              "question": "What label did townsend record a noisescapes demo for?",
+              "file_path": "data/raw/wikitext/article_1500.txt",
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: Which album debuted at number one?\nAnswer: \" loose \" debuted at number one",
+            "metadata": {
+              "answer": "\" loose \" debuted at number one",
+              "relevance_score": 0.6577420454396438,
+              "question": "Which album debuted at number one?",
+              "chunk_index": 0,
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "file_path": "data/raw/wikitext/article_2737.txt",
+              "type": "qa_combined"
+            }
+          },
+          {
+            "document": "Question: What did king want to do with the song?\nAnswer: king has always wanted to play \" behind the crooked cross \" because it 's got a cool intro",
+            "metadata": {
+              "question": "What did king want to do with the song?",
+              "file_path": "data/raw/wikitext/article_779.txt",
+              "type": "qa_combined",
+              "chunk_index": 0,
+              "relevance_score": 0.607435578509906,
+              "version": "kb_v1_c627d49b",
+              "accepted": true,
+              "answer": "king has always wanted to play \" behind the crooked cross \" because it 's got a cool intro"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

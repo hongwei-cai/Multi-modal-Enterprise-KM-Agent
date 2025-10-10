@@ -86,7 +86,7 @@ class ABTestConfig:
 class LoRAConfig:
     """Configuration for LoRA fine-tuning."""
 
-    r: int = 8  # LoRA rank
+    r: int = 16  # LoRA rank
     lora_alpha: int = 16  # LoRA scaling parameter
     target_modules: List[str] = field(
         default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj"]
