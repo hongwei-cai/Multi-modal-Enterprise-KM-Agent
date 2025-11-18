@@ -182,17 +182,17 @@ model, tokenizer = manager.load_lora_adapter("microsoft/phi-2", "my_adapter")
 **Branch Name**: `feature/dataset-management`
 
 ### Commit Sequence:
-1. **Commit Message**: `feat: implement QA dataset generation from documents`
+1. **Commit Message**: `feat: implement QA dataset generation from documents` ✅
    - Enhance with lessons from Story 3.5
    - Improve data quality based on fine-tuning results
    - Add automated data augmentation
 
-2. **Commit Message**: `feat: build dataset versioning and management`
+2. **Commit Message**: `feat: build dataset versioning and management` ✅
    - Implement dataset splitting and sampling
    - Add dataset quality metrics based on fine-tuning outcomes
    - Create dataset comparison tools
 
-3. **Commit Message**: `feat: add data augmentation and preprocessing`
+3. **Commit Message**: `feat: add data augmentation and preprocessing` ✅
    - Implement text augmentation techniques optimized for RAG
    - Add data cleaning and normalization based on validation results
    - Create synthetic data generation for difficult cases
