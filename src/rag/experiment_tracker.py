@@ -191,9 +191,14 @@ class MLflowExperimentTracker:
         except Exception:
             self.client.create_experiment(config.experiment_name)
 
-        # Start run
+        # Start run. If a run is already active, start a nested run to avoid
+        # "run already active" errors in test environments where instrumented
+        # code may start runs without ending them.
         mlflow.set_experiment(config.experiment_name)
-        run = mlflow.start_run(run_name=config.run_name)
+        if mlflow.active_run() is not None:
+            run = mlflow.start_run(run_name=config.run_name, nested=True)
+        else:
+            run = mlflow.start_run(run_name=config.run_name)
 
         # Log parameters
         mlflow.log_params(config.parameters)
