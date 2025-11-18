@@ -15,6 +15,7 @@ import mlflow
 import psutil
 
 from configs.model_config import BenchmarkSummary
+from src.rag.analysis.quality_analysis import compare_responses
 from src.rag.benchmarker import get_benchmarker
 from src.rag.experiment_tracker import (
     ExperimentConfig,
@@ -139,21 +140,57 @@ class BenchmarkingWorkflow:
             / baseline_results.avg_response_length
         ) * 100
 
+        # Throughput comparison (tokens/sec)
+        def avg_tokens_per_second(summary: BenchmarkSummary) -> float:
+            vals = [r.get("tokens_per_second", 0) for r in summary.results]
+            return sum(vals) / len(vals) if vals else 0.0
+
+        baseline_tps = avg_tokens_per_second(baseline_results)
+        finetuned_tps = avg_tokens_per_second(finetuned_results)
+
+        # Memory: compute average memory usage from per-query measurements
+        def avg_memory_mb(summary: BenchmarkSummary) -> float:
+            vals = [r.get("memory_usage_mb", 0) for r in summary.results]
+            return sum(vals) / len(vals) if vals else 0.0
+
+        baseline_mem = avg_memory_mb(baseline_results)
+        finetuned_mem = avg_memory_mb(finetuned_results)
+
+        # Quality degradation analysis using semantic similarity
+        baseline_resps = [r.get("response", "") for r in baseline_results.results]
+        finetuned_resps = [r.get("response", "") for r in finetuned_results.results]
+        quality = compare_responses(baseline_resps, finetuned_resps)
+
         return {
             "baseline": {
                 "latency": baseline_results.avg_latency,
                 "response_length": baseline_results.avg_response_length,
                 "success_rate": baseline_results.success_rate,
+                "avg_tokens_per_second": baseline_tps,
+                "avg_memory_mb": baseline_mem,
             },
             "finetuned": {
                 "latency": finetuned_results.avg_latency,
                 "response_length": finetuned_results.avg_response_length,
                 "success_rate": finetuned_results.success_rate,
+                "avg_tokens_per_second": finetuned_tps,
+                "avg_memory_mb": finetuned_mem,
             },
             "improvements": {
                 "latency_percent": latency_change,
                 "response_length_percent": length_change,
+                "throughput_percent": (
+                    (finetuned_tps - baseline_tps) / baseline_tps * 100
+                    if baseline_tps
+                    else 0.0
+                ),
+                "memory_percent": (
+                    (baseline_mem - finetuned_mem) / baseline_mem * 100
+                    if baseline_mem
+                    else 0.0
+                ),
             },
+            "quality": quality,
         }
 
     def _log_to_mlflow(
@@ -187,7 +224,8 @@ class BenchmarkingWorkflow:
             latency_ms=metrics["baseline"]["latency"] * 1000,
             memory_usage_mb=self._calculate_avg_memory(metrics["baseline"]),
             cpu_usage_percent=psutil.cpu_percent(),
-            response_quality_score=metrics["baseline"]["success_rate"],
+            throughput_tokens_per_sec=metrics["baseline"].get("avg_tokens_per_second"),
+            response_quality_score=metrics.get("quality", {}).get("avg_similarity"),
         )
         self.experiment_tracker.log_metrics(
             run_id, baseline_metrics, prefix="baseline_"
@@ -198,11 +236,25 @@ class BenchmarkingWorkflow:
             latency_ms=metrics["finetuned"]["latency"] * 1000,
             memory_usage_mb=self._calculate_avg_memory(metrics["finetuned"]),
             cpu_usage_percent=psutil.cpu_percent(),
-            response_quality_score=metrics["finetuned"]["success_rate"],
+            throughput_tokens_per_sec=metrics["finetuned"].get("avg_tokens_per_second"),
+            response_quality_score=metrics.get("quality", {}).get("avg_similarity"),
         )
         self.experiment_tracker.log_metrics(
             run_id, finetuned_metrics, prefix="finetuned_"
         )
+
+        # Log quality analysis as artifact (per-query similarities)
+        try:
+            quality_artifact = metrics.get("quality", {})
+            if quality_artifact:
+                # Use internal helper to log JSON artifact
+                self.experiment_tracker._log_json_artifact(
+                    run_id, quality_artifact, "quality_analysis.json"
+                )
+        except Exception:
+            # Non-fatal: logging artifact failed
+            logger = __import__("logging").getLogger(__name__)
+            logger.debug("Failed to log quality analysis artifact to MLflow")
 
         self.experiment_tracker.end_experiment(run_id)
         print("✓ Benchmarking complete! Results logged to MLflow.")
@@ -212,8 +264,22 @@ class BenchmarkingWorkflow:
     def _calculate_avg_memory(self, model_metrics: Dict[str, Any]) -> float:
         """Calculate average memory usage (placeholder - would need
         actual memory tracking)."""
-        # This would need to be implemented based on how memory is tracked
-        return 0.0  # Placeholder
+        # Attempt to read avg memory from provided metrics dicts
+        try:
+            # if model_metrics contains 'avg_memory_mb' return it
+            if "avg_memory_mb" in model_metrics:
+                return float(model_metrics["avg_memory_mb"])
+
+            # Otherwise, if it's nested, compute from results
+            if "results" in model_metrics and isinstance(
+                model_metrics["results"], list
+            ):
+                vals = [r.get("memory_usage_mb", 0.0) for r in model_metrics["results"]]
+                return sum(vals) / len(vals) if vals else 0.0
+        except Exception:
+            return 0.0
+
+        return 0.0
 
     def _get_sample_responses(
         self,

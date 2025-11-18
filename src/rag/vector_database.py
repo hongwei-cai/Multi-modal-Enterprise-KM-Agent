@@ -60,7 +60,20 @@ class VectorDatabase:
             # Client mode: Connect to ChromaDB server
             host = persist_directory.split("://")[1].split(":")[0]
             port = int(persist_directory.split(":")[-1])
-            self.client = HttpClient(host=host, port=port)
+            try:
+                self.client = HttpClient(host=host, port=port)
+            except Exception as e:
+                # Could not connect to remote Chroma server (common when
+                # CHROMA_DB_PATH points to a container name not resolvable
+                # from the host). Fall back to an in-memory EphemeralClient.
+                logger.warning(
+                    "Could not connect to ChromaDB server at %s:%s (%s). "
+                    "Falling back to EphemeralClient.",
+                    host,
+                    port,
+                    e,
+                )
+                self.client = EphemeralClient()
         else:
             if persist_directory == ":memory:" or os.getenv("PYTEST_CURRENT_TEST"):
                 # Use ephemeral (in-memory) client during tests

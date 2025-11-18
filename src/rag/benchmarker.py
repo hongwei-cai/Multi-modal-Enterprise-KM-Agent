@@ -187,6 +187,12 @@ class Benchmarker:
         """
         # Measure memory before
         memory_before = psutil.virtual_memory().used / (1024**2)  # MB
+        # GPU memory if available
+        gpu_memory_before = (
+            torch.cuda.memory_allocated() / (1024**2)
+            if torch.cuda.is_available()
+            else 0
+        )
         start_time = time.time()
 
         try:
@@ -211,10 +217,30 @@ class Benchmarker:
             response = tokenizer.decode(outputs[0], skip_special_tokens=True)
             response_length = len(response.split())
 
+            # Tokens generated and throughput
+            try:
+                generated_tokens = int(
+                    outputs[0].shape[0] - inputs["input_ids"][0].shape[0]
+                )
+            except Exception:
+                generated_tokens = max(0, len(response.split()) - len(query.split()))
+
             # Measure performance
             latency = time.time() - start_time
             memory_after = psutil.virtual_memory().used / (1024**2)  # MB
             memory_usage = memory_after - memory_before
+            gpu_memory_after = (
+                torch.cuda.memory_allocated() / (1024**2)
+                if torch.cuda.is_available()
+                else 0
+            )
+            gpu_memory_used = gpu_memory_after - gpu_memory_before
+
+            tokens_per_second = (
+                generated_tokens / latency
+                if latency > 0 and generated_tokens >= 0
+                else 0
+            )
 
             return {
                 "query": query,
@@ -222,6 +248,9 @@ class Benchmarker:
                 "response_length": response_length,
                 "latency": latency,
                 "memory_usage_mb": memory_usage,
+                "gpu_memory_usage_mb": gpu_memory_used,
+                "tokens_generated": generated_tokens,
+                "tokens_per_second": tokens_per_second,
                 "success": True,
             }
 
