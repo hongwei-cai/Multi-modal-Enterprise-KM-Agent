@@ -34,7 +34,7 @@ class QuantizationManager:
         self._bnb_available = importlib.util.find_spec("bitsandbytes") is not None
 
     def apply_pytorch_quantization(
-        self, model: AutoModelForCausalLM, quant_type: str = "dynamic"
+        self, model: AutoModelForCausalLM, quant_type: Optional[str] = "dynamic"
     ) -> AutoModelForCausalLM:
         """Apply PyTorch quantization to the model using torch.ao.quantization.
 
@@ -86,7 +86,7 @@ class QuantizationManager:
         )
         return has_linear_layers
 
-    def get_quantization_config(self, quant_type: str = "dynamic") -> dict:
+    def get_quantization_config(self, quant_type: Optional[str] = "dynamic") -> dict:
         """Get quantization configuration for model loading.
 
         Returns a dictionary of keyword args that can be passed to
@@ -177,6 +177,124 @@ class QuantizationManager:
                         logger.debug("Calibration batch could not be processed")
 
         logger.info("Calibration complete")
+
+    def on_the_fly_quantize(
+        self, model: AutoModelForCausalLM, quant_type: str = "dynamic"
+    ) -> AutoModelForCausalLM:
+        """Apply quantization to an already-loaded model in-place for inference.
+
+        This is a convenience wrapper around `apply_pytorch_quantization` that
+        attempts to keep the model on the same device and applies lightweight
+        quantization suitable for inference.
+        """
+        quant_type = (quant_type or "dynamic").lower()
+        if quant_type in ("bnb_4bit", "bnb_8bit"):
+            # bitsandbytes quantization must be applied at load time; nothing to
+            # do for an already loaded HF model. Caller should reload using
+            # `from_pretrained(..., **get_quantization_config(...))`.
+            logger.warning(
+                "bitsandbytes quantization requested on-the-fly; reload model instead"
+            )
+            return model
+
+        # For PyTorch quantization, we reuse apply_pytorch_quantization which
+        # performs dynamic/static quantization using torch.ao APIs.
+        return self.apply_pytorch_quantization(model, quant_type=quant_type)
+
+    def prune_model(
+        self,
+        model: AutoModelForCausalLM,
+        amount: float = 0.2,
+        method: str = "l1_unstructured",
+        parameters: Optional[Iterable[str]] = None,
+    ) -> AutoModelForCausalLM:
+        """Apply simple global pruning to the model.
+
+        - `amount` is the fraction of connections to prune (0-1).
+        - `method` can be one of torch.nn.utils.prune methods supported by name.
+        - `parameters` is an optional iterable of parameter names to consider;
+          if None, all `weight` parameters of `nn.Linear` and `nn.Conv*` are used.
+
+        This operation modifies the model in-place and returns it.
+        """
+        try:
+            import torch.nn.utils.prune as prune
+
+            # Collect candidate parameters (module, name)
+            candidates = []
+            for module_name, module in model.named_modules():
+                if isinstance(
+                    module,
+                    (
+                        torch.nn.Linear,
+                        torch.nn.Conv1d,
+                        torch.nn.Conv2d,
+                        torch.nn.Conv3d,
+                    ),
+                ):
+                    for pname, _ in module.named_parameters(recurse=False):
+                        if pname == "weight":
+                            candidates.append((module, "weight"))
+
+            if not candidates:
+                logger.warning("No pruning candidates found in model")
+                return model
+
+            # Apply global unstructured pruning as default
+            if method == "l1_unstructured":
+                prune.global_unstructured(
+                    candidates, pruning_method=prune.L1Unstructured, amount=amount
+                )
+            elif method == "random_unstructured":
+                prune.global_unstructured(
+                    candidates, pruning_method=prune.RandomUnstructured, amount=amount
+                )
+            else:
+                # Attempt to resolve method name dynamically
+                method_obj = getattr(prune, method, None)
+                if method_obj is None:
+                    raise ValueError(f"Unsupported pruning method: {method}")
+                prune.global_unstructured(
+                    candidates, pruning_method=method_obj, amount=amount
+                )
+
+            logger.info("Applied pruning (method=%s, amount=%.2f)", method, amount)
+            return model
+        except Exception as e:
+            logger.error("Pruning failed: %s", e)
+            raise
+
+    def select_quantization_strategy(
+        self,
+        model_name: Optional[str] = None,
+        model: Optional[AutoModelForCausalLM] = None,
+        constraints: Optional[dict] = None,
+    ) -> str:
+        """Select a quantization strategy based on simple heuristics.
+
+        `constraints` can include:
+        - `memory_budget_mb`: preferred maximum model size in MB
+        - `latency_ms`: target per-request latency in ms
+        - `quality_tolerance`: allowable drop in semantic similarity (0-1)
+
+        Returns one of: 'bnb_4bit', 'bnb_8bit', 'dynamic', 'static', 'none'
+        """
+        constraints = constraints or {}
+        mem_budget = constraints.get("memory_budget_mb", None)
+
+        # Prefer bitsandbytes 4-bit if available and tight memory budget
+        if self._bnb_available:
+            if mem_budget is not None and mem_budget < 2000:
+                return "bnb_4bit"
+            if mem_budget is not None and mem_budget < 4000:
+                return "bnb_8bit"
+
+        # If model is on CPU or no GPU available, prefer dynamic quantization
+        if not torch.cuda.is_available():
+            return "dynamic"
+
+        # Default: dynamic quantization for quick wins without reloads
+        return "dynamic"
 
     def prepare_qat(self, model: AutoModelForCausalLM) -> AutoModelForCausalLM:
         """Prepare a model for Quantization Aware Training (QAT).

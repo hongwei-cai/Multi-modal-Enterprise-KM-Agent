@@ -112,7 +112,7 @@ class ModelManager:
         )
 
     def apply_pytorch_quantization(
-        self, model: AutoModelForCausalLM, quant_type: str = "dynamic"
+        self, model: AutoModelForCausalLM, quant_type: Optional[str] = "dynamic"
     ) -> AutoModelForCausalLM:
         """Apply PyTorch quantization to the model using torch.ao.quantization."""
         return self.quantization_manager.apply_pytorch_quantization(model, quant_type)
@@ -121,7 +121,7 @@ class ModelManager:
         self,
         model_name: str,
         use_quantization: bool = True,
-        quant_type: str = "dynamic",
+        quant_type: Optional[str] = "dynamic",
         use_cache: bool = True,
     ) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
         """Load model with advanced optimization and caching."""
@@ -158,6 +158,12 @@ class ModelManager:
             # Set pad token if missing
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
+
+            # Determine quantization strategy when requested
+            if use_quantization and (
+                quant_type is None or str(quant_type).lower() in ("auto", "auto_select")
+            ):
+                quant_type = self.get_optimal_quantization(model_name)
 
             # Determine device: quantization requires CPU
             model_device = "cpu" if use_quantization else self.device
@@ -694,6 +700,34 @@ class ModelManager:
 
         # Delegate to LoRA manager
         return self.lora_manager.apply_lora_to_model(base_model, tokenizer, lora_config)
+
+    # --- New convenience wrappers for runtime ops ---
+    def on_the_fly_quantize(
+        self, model: AutoModelForCausalLM, quant_type: str = "dynamic"
+    ) -> AutoModelForCausalLM:
+        """Apply on-the-fly quantization to an already-loaded model."""
+        return self.quantization_manager.on_the_fly_quantize(
+            model, quant_type=quant_type
+        )
+
+    def prune_model(
+        self,
+        model: AutoModelForCausalLM,
+        amount: float = 0.2,
+        method: str = "l1_unstructured",
+    ) -> AutoModelForCausalLM:
+        """Prune a model using simple heuristics and return the pruned model."""
+        return self.quantization_manager.prune_model(
+            model, amount=amount, method=method
+        )
+
+    def get_optimal_quantization(
+        self, model_name: str, constraints: Optional[dict] = None
+    ) -> str:
+        """Get an optimal quantization strategy for a model using heuristics."""
+        return self.quantization_manager.select_quantization_strategy(
+            model_name=model_name, constraints=constraints
+        )
 
     def save_lora_adapter(
         self, lora_model: PeftModel, adapter_name: str, model_name: str
