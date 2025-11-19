@@ -41,7 +41,7 @@ class RAGBaselineEvaluator:
     def __init__(
         self,
         knowledge_base_collection: str = "knowledge_base",
-        model_name: str = "microsoft/DialoGPT-medium",
+        model_name: str = "ollama:qwen3-8b",
         db_path: Optional[str] = None,
     ):
         """
@@ -465,7 +465,7 @@ class RAGBaselineEvaluator:
 
 def run_baseline_evaluation(
     eval_dataset: str = "data/processed/test_auto_topics/test.jsonl",
-    model_name: str = "microsoft/DialoGPT-medium",
+    model_name: str = "ollama:qwen3-8b",
     collection_name: str = "knowledge_base",
     output_dir: str = "data/processed/baseline_evaluation",
 ) -> Dict[str, Any]:
@@ -498,7 +498,7 @@ if __name__ == "__main__":
         help="Path to evaluation dataset",
     )
     parser.add_argument(
-        "--model_name", default="microsoft/DialoGPT-medium", help="LLM model name"
+        "--model_name", default="ollama:qwen3-8b", help="LLM model name"
     )
     parser.add_argument(
         "--collection_name",

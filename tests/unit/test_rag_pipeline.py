@@ -52,16 +52,23 @@ def test_answer_question_no_context(mock_components):
         assert response["context_docs"] == []
 
 
+@patch("configs.model_config.get_model_name")
 @patch("src.rag.llm_client.get_model_manager")
 @patch("importlib.metadata.version")  # Patch to avoid bitsandbytes check
-def test_get_rag_pipeline(mock_version, mock_get_manager):
+def test_get_rag_pipeline(
+    mock_version, mock_get_manager, mock_get_model_name, mock_components
+):
     """Test convenience function."""
     mock_version.return_value = "0.41.0"  # Mock bitsandbytes version
+    # Use the fixture to stub retriever/prompt/llm components (not referenced directly)
+    del mock_components
     mock_manager = MagicMock()
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
     mock_manager.load_model_with_fallback.return_value = (mock_model, mock_tokenizer)
-    mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
+    # Make the central config return a local HF model so the client
+    # goes down the local-model path during initialization.
+    mock_get_model_name.return_value = "google/flan-t5-small"
     mock_get_manager.return_value = mock_manager
 
     pipeline = get_rag_pipeline(top_k=3)

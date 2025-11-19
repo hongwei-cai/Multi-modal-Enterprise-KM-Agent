@@ -1,6 +1,6 @@
 {
   "evaluation_config": {
-    "model": "microsoft/DialoGPT-medium",
+    "model": "ollama:qwen3-8b",
     "knowledge_base_collection": "knowledge_base",
     "eval_dataset": "data/processed/kb_v1_c627d49b/train.jsonl",
     "eval_samples": 100

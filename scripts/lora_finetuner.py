@@ -10,8 +10,8 @@ This script provides flexible LoRA operations including:
 
 Usage:
     python scripts/lora_finetuner.py --help
-    python scripts/lora_finetuner.py --prepare --model microsoft/DialoGPT-medium
-    python scripts/lora_finetuner.py --train --model microsoft/DialoGPT-medium \
+    python scripts/lora_finetuner.py --prepare --model ollama:qwen3-8b
+    python scripts/lora_finetuner.py --train --model ollama:qwen3-8b \
         --dataset your_dataset
     python scripts/lora_finetuner.py --save-adapter --adapter-name my_adapter
     python scripts/lora_finetuner.py --load-adapter --adapter-name my_adapter --test
@@ -61,16 +61,25 @@ class LoRAFinetuner:
             )
             self.logger.info(f"Target modules: {lora_config.target_modules}")
 
-            # Apply LoRA
+            # Determine a base model for LoRA training. If a provider-backed
+            # runtime model is requested (e.g. 'ollama:...'), use the HF base
+            # model for fine-tuning (controlled by HF_MODEL_FOR_FINETUNE env var)
+            from configs.model_config import get_model_name
+
+            training_model = (
+                get_model_name(prefer_hf=True) if ":" in model_name else model_name
+            )
+
+            # Apply LoRA (this will use the training_model when appropriate)
             self.lora_model, self.current_tokenizer = self.manager.apply_lora_to_model(
-                model_name=model_name,
+                model_name=training_model,
                 lora_config=lora_config,
                 use_quantization=use_quantization,
             )
 
-            # Also prepare for training
+            # Also prepare for training using the HF base when required
             self.current_model, _ = self.manager.prepare_model_for_lora_training(
-                model_name=model_name, use_quantization=use_quantization
+                model_name=training_model, use_quantization=use_quantization
             )
 
             self.logger.info("Model preparation completed successfully!")
@@ -238,23 +247,23 @@ def main():
         epilog="""
 Examples:
   # Prepare a model for LoRA
-  python scripts/lora_finetuner.py --prepare --model microsoft/DialoGPT-medium
+    python scripts/lora_finetuner.py --prepare --model ollama:qwen3-8b
 
   # Train a model
   python scripts/lora_finetuner.py --prepare --train --model \
-    microsoft/DialoGPT-medium --dataset ./data/train.json
+    ollama:qwen3-8b --dataset ./data/train.json
 
   # Save an adapter
   python scripts/lora_finetuner.py --prepare --save-adapter \
-    --adapter-name my_adapter --model microsoft/DialoGPT-medium
+    --adapter-name my_adapter --model ollama:qwen3-8b
 
   # Load and test an adapter
   python scripts/lora_finetuner.py --load-adapter --adapter-name my_adapter \
-    --model microsoft/DialoGPT-medium --test
+    --model ollama:qwen3-8b --test
 
   # Full pipeline: prepare, train, save, test
   python scripts/lora_finetuner.py --prepare --train --save-adapter --test \
-    --model microsoft/DialoGPT-medium --dataset ./data/train.json \
+    --model ollama:qwen3-8b --dataset ./data/train.json \
         --adapter-name trained_adapter
         """,
     )
@@ -263,8 +272,8 @@ Examples:
     parser.add_argument(
         "--model",
         type=str,
-        default="microsoft/DialoGPT-medium",
-        help="Model name to use (default: microsoft/DialoGPT-medium)",
+        default="ollama:qwen3-8b",
+        help="Model name to use (default: ollama:qwen3-8b)",
     )
     parser.add_argument(
         "--quantization",

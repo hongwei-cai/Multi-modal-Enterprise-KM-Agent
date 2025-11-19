@@ -13,15 +13,11 @@ def main():
     """Run automated model benchmarking."""
 
     # Configuration
-    baseline_model = "microsoft/DialoGPT-medium"
+    baseline_model = "ollama:qwen3-8b"
     project_root = Path(__file__).parent.parent
     model_configs_path = project_root / "model_configs"
     adapter_path = (
-        model_configs_path
-        / "lora_adapters"
-        / "microsoft"
-        / "DialoGPT-medium"
-        / "lora_adapter"
+        model_configs_path / "lora_adapters" / "ollama" / "qwen3-8b" / "lora_adapter"
     )
 
     test_queries = [

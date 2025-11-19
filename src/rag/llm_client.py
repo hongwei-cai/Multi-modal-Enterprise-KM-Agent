@@ -4,10 +4,12 @@ LLM inference client: Local (Transformers) or Cloud (vLLM).
 import logging
 import os
 import time
-from typing import List, Optional
+from typing import Any, List, Optional, Union
 
 import psutil
 import requests  # type: ignore
+
+from configs.model_config import get_model_name
 
 from .experiment_tracker import (
     MLflowExperimentTracker,
@@ -15,6 +17,8 @@ from .experiment_tracker import (
     track_model_performance,
 )
 from .managers.model_manager import get_model_manager
+from .providers.dashscope_client import DashscopeClient
+from .providers.ollama_client import OllamaClient
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +32,29 @@ class LLMClient:
         run_id: Optional[str] = None,
     ):
         if model_name is None:
-            model_name = os.getenv("LLM_MODEL_NAME", "microsoft/DialoGPT-medium")
+            model_name = os.getenv("LLM_MODEL_NAME", "ollama:qwen3-8b")
         self.model_name = model_name
         self.is_cloud = bool(os.getenv("CLOUD_ENV"))
         self.model_manager = get_model_manager()
+
+        # Provider-based clients (Ollama / Dashscope). The environment
+        # variable `LLM_PROVIDER` can be set to 'ollama' or 'dashscope' to select
+        # the provider. Alternatively, pass `model_name` as 'ollama:qwen3-8b'.
+        self.provider_client: Optional[Union[OllamaClient, DashscopeClient]] = None
+        provider_env = os.getenv("LLM_PROVIDER")
+        provider = provider_env
+        model_id = None
+        if model_name and ":" in model_name:
+            provider, model_id = model_name.split(":", 1)
+        elif provider_env:
+            provider = provider_env
+
+        if provider:
+            provider = provider.lower()
+            if provider == "ollama":
+                self.provider_client = OllamaClient(model=model_id or "qwen3-8b")
+            elif provider == "dashscope":
+                self.provider_client = DashscopeClient(model=model_id or "qwen3-max")
 
         # Dynamic model selection
         env_priority = os.getenv("MODEL_PRIORITY", "balanced")
@@ -47,28 +70,50 @@ class LLMClient:
             )  # Default to False for better generation on M1
             self.quant_type = os.getenv("QUANT_TYPE", "dynamic")
 
-            # Use dynamic model selection if no specific model requested
-            if model_name == os.getenv("LLM_MODEL_NAME", "microsoft/DialoGPT-medium"):
-                selected_model = self.model_manager.get_model_recommendation(
-                    self.priority
-                )
+            # Use central config selection if no specific model requested
+            if model_name == os.getenv("LLM_MODEL_NAME", "ollama:qwen3-8b"):
+                selected_model = get_model_name()
                 logger.info(
-                    "Selected model '%s' for priority '%s'",
-                    selected_model,
-                    self.priority,
+                    "Selected model '%s' from configs.model_config", selected_model
                 )
                 self.model_name = selected_model
 
-            self.model, self.tokenizer = self.model_manager.load_model_with_fallback(
-                self.model_name,
-                use_quantization=self.use_quantization,
-                quant_type=self.quant_type,
-            )
-            # Check if seq2seq model
-            from transformers import AutoConfig
+                # Recompute provider client if the selected model is provider-prefixed
+                provider = None
+                model_id = None
+                if self.model_name and ":" in self.model_name:
+                    provider, model_id = self.model_name.split(":", 1)
+                    provider = provider.lower()
+                    if provider == "ollama":
+                        self.provider_client = OllamaClient(
+                            model=model_id or "qwen3-8b"
+                        )
+                    elif provider == "dashscope":
+                        self.provider_client = DashscopeClient(
+                            model=model_id or "qwen3-max"
+                        )
 
-            config = AutoConfig.from_pretrained(self.model_name)
-            self.is_seq2seq = config.model_type in ["t5", "mt5", "bart", "pegasus"]
+            # If using a provider client, we don't load a local HF model.
+            if self.provider_client is not None:
+                self.model: Any = None
+                self.tokenizer: Any = None
+            else:
+                (
+                    self.model,
+                    self.tokenizer,
+                ) = self.model_manager.load_model_with_fallback(
+                    self.model_name,
+                    use_quantization=self.use_quantization,
+                    quant_type=self.quant_type,
+                )
+            # Check if seq2seq model (only for local HF models)
+            if self.provider_client is None:
+                from transformers import AutoConfig
+
+                config = AutoConfig.from_pretrained(self.model_name)
+                self.is_seq2seq = config.model_type in ["t5", "mt5", "bart", "pegasus"]
+            else:
+                self.is_seq2seq = False
         else:
             self.api_url = os.getenv(
                 "VLLM_API_URL", "http://localhost:8000/v1/chat/completions"
@@ -94,7 +139,21 @@ class LLMClient:
         start_time = time.time()
         memory_before = psutil.virtual_memory().used / (1024**2)  # MB
 
-        if self.is_cloud:
+        # Response can be either a string from provider adapters or an HTTP
+        # response object from requests; type as Any to satisfy static checks.
+        response: Any = None
+
+        if self.provider_client is not None:
+            # Delegate generation to provider adapter
+            try:
+                response = self.provider_client.generate(
+                    prompt, max_tokens=max_length, temperature=temperature
+                )
+            except Exception as e:
+                logger.error("Provider generation failed: %s", e)
+                return "Error: Provider generation failed"
+
+        elif self.is_cloud:
             # Use vLLM API with parameters
             response = requests.post(
                 self.api_url,
@@ -113,6 +172,10 @@ class LLMClient:
             # Local generation with parameters
             logger.debug("Prompt length: %s", len(prompt))
             logger.debug("Prompt start: %s...", prompt[:200])
+            # Ensure tokenizer and model are loaded for local generation
+            if self.tokenizer is None or self.model is None:
+                raise RuntimeError("Local model/tokenizer not loaded")
+
             inputs = self.tokenizer(prompt, return_tensors="pt")
 
             # Move inputs to model device
@@ -270,8 +333,12 @@ class LLMClient:
         max_memory_gb: Optional[float] = None,
     ):
         """Get the optimal model for given constraints and switch to it."""
-        optimal_model = self.model_manager.get_best_model_for_constraints(
-            max_latency_ms, max_memory_gb
+        # ModelManager removed `get_best_model_for_constraints`; use
+        # `get_optimal_model` which selects by memory/quality heuristics.
+        # We ignore `max_latency_ms` here since that selection requires
+        # a per-model latency profile in `model_manager.model_configs`.
+        optimal_model = self.model_manager.get_optimal_model(
+            max_memory_gb=max_memory_gb
         )
 
         if optimal_model != self.model_name:

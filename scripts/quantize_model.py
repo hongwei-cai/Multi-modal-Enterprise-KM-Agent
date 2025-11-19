@@ -3,7 +3,7 @@
 Utility to load and (optionally) calibrate / convert models with quantization.
 
 Examples:
-  python scripts/quantize_model.py --model microsoft/DialoGPT-medium
+    python scripts/quantize_model.py --model ollama:qwen3-8b
     --quant_type dynamic
   python scripts/quantize_model.py --model gpt2 --quant_type bnb_4bit
     --output_dir model_configs/quantized/gpt2_4bit
@@ -52,6 +52,14 @@ def main():
         quant_type=args.quant_type,
         use_cache=not args.no_cache,
     )
+
+    if model is None or tokenizer is None:
+        logging.error(
+            "Model '%s' appears to be provider-backed or unavailable locally. "
+            "Quantization must be run on a local HF model.",
+            args.model,
+        )
+        raise SystemExit(2)
 
     if args.output_dir:
         out = Path(args.output_dir)

@@ -1,5 +1,5 @@
 """
-Startup script for vLLM server with DialoGPT-medium model.
+Startup script for vLLM server with Ollama `qwen3-8b` model.
 Run: python scripts/start_vllm_server.py
 """
 import os
@@ -20,7 +20,7 @@ def get_model_name():
     if os.getenv("CLOUD_ENV"):
         return "BAAI/bge-m3"  # Or your preferred cloud model (e.g., GPT-2, Llama)
     else:
-        return "microsoft/DialoGPT-medium"  # Local default
+        return "ollama:qwen3-8b"  # Local default
 
 
 def start_vllm_server():

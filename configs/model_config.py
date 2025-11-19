@@ -1,29 +1,29 @@
 """
 Model Configuration Classes
 
-This module contains all the data classes and enums used for model configuration,
+This module contains dataclasses used for model configuration,
 benchmarking, versioning, A/B testing, and LoRA fine-tuning.
+
+This simplified variant removes the previous `ModelTier` enum and
+provides a small helper to select between the local Ollama model and
+Dashscope cloud model. It also exposes the HF base model name for
+LoRA/PEFT workflows.
 """
 
+import os
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Dict, List
-
-
-class ModelTier(Enum):
-    """Model performance tiers for quality-speed tradeoffs."""
-
-    SPEED = "speed"  # Small, fast models for quick responses
-    BALANCED = "balanced"  # Medium models balancing speed and quality
-    QUALITY = "quality"  # Large models for high-quality responses
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
 class ModelConfig:
-    """Configuration for a model with performance characteristics."""
+    """Configuration for a model with performance characteristics.
+
+    Note: This dataclass deliberately does not include a tier enum.
+    It stores concrete resource estimates and a short description.
+    """
 
     name: str
-    tier: ModelTier  # SPEED/BALANCED/QUALITY
     memory_gb: float
     latency_ms: float  # Estimated latency per token
     quality_score: float  # Relative quality score (0-1)
@@ -90,8 +90,82 @@ class LoRAConfig:
     lora_alpha: int = 8  # LoRA scaling parameter
     target_modules: List[str] = field(
         default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj"]
-    )  # Target attention modules
+    )
     lora_dropout: float = 0.05
     bias: str = "none"  # Bias handling
     task_type: str = "CAUSAL_LM"  # Task type for PEFT
     inference_mode: bool = True  # Use inference mode for memory efficiency
+
+
+# Supported provider-backed models
+SUPPORTED_MODELS = {
+    "ollama:qwen3-8b": ModelConfig(
+        name="ollama:qwen3-8b",
+        memory_gb=8.0,
+        latency_ms=150.0,
+        quality_score=0.9,
+        description="Qwen3 8B served via Ollama (local or remote)",
+    ),
+    "dashscope:qwen3-max": ModelConfig(
+        name="dashscope:qwen3-max",
+        memory_gb=16.0,
+        latency_ms=200.0,
+        quality_score=0.98,
+        description="Qwen3-max served via Dashscope (production hosted provider)",
+    ),
+}
+
+# Default model names (can be overridden via environment variables)
+DEFAULT_LOCAL_MODEL = os.getenv("OLLAMA_MODEL", "ollama:qwen3-8b")
+DEFAULT_CLOUD_MODEL = os.getenv("DASHSCOPE_MODEL", "dashscope:qwen3-max")
+# Hugging Face base model used for LoRA/PEFT training
+HF_BASE_MODEL = os.getenv("HF_MODEL_FOR_FINETUNE", "qwen/qwen-3-8b")
+
+
+def _detect_deployment_mode() -> str:
+    """Detect whether we should select ``local`` or ``cloud`` models.
+
+    Priority (highest -> lowest):
+    - If ``LLM_PROVIDER`` env var is set to either "ollama" or "dashscope", use it.
+    - If ``CLOUD_ENV`` is set (truthy), treat as cloud.
+    - Otherwise default to local.
+    """
+    prov = os.getenv("LLM_PROVIDER")
+    if prov:
+        prov = prov.lower()
+        if prov.startswith("dashscope"):
+            return "cloud"
+        if prov.startswith("ollama"):
+            return "local"
+
+    if os.getenv("CLOUD_ENV"):
+        return "cloud"
+
+    return "local"
+
+
+def get_model_name(
+    provider_override: Optional[str] = None, prefer_hf: bool = False
+) -> str:
+    """Return the effective model name.
+
+    - If ``provider_override`` is a provider-prefixed full model string
+    (contains ':'), it is returned.
+    - If ``provider_override`` is "local" or "cloud" it selects the corresponding default.
+    - If ``prefer_hf`` is True, returns the HuggingFace base model name (for LoRA training).
+    - Otherwise selects based on environment via ``_detect_deployment_mode()``.
+    """
+    if provider_override:
+        if ":" in provider_override:
+            return provider_override
+        if provider_override in ("local", "cloud"):
+            mode = provider_override
+        else:
+            mode = _detect_deployment_mode()
+    else:
+        mode = _detect_deployment_mode()
+
+    if prefer_hf:
+        return HF_BASE_MODEL
+
+    return DEFAULT_CLOUD_MODEL if mode == "cloud" else DEFAULT_LOCAL_MODEL

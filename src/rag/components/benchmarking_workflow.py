@@ -320,7 +320,7 @@ class BenchmarkingWorkflow:
         print("\n🎯 BENCHMARK RESULTS COMPARISON")
         print("=" * 60)
 
-        baseline_model = "microsoft/DialoGPT-medium"  # Would be parameterized
+        baseline_model = "ollama:qwen3-8b"  # Would be parameterized
 
         print(f"Baseline Model ({baseline_model}):")
         print(f"  Average Latency: {metrics['baseline']['latency']:.2f}s")

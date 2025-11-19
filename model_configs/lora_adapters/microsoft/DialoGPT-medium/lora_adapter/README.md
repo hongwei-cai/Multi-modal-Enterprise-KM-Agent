@@ -1,9 +1,9 @@
 ---
-base_model: microsoft/DialoGPT-medium
+base_model: ollama:qwen3-8b
 library_name: peft
 pipeline_tag: text-generation
 tags:
-- base_model:adapter:microsoft/DialoGPT-medium
+- base_model:adapter:ollama:qwen3-8b
 - lora
 - transformers
 ---

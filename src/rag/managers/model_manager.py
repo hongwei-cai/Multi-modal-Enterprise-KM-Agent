@@ -21,8 +21,8 @@ from configs.model_config import (
     BenchmarkResult,
     LoRAConfig,
     ModelConfig,
-    ModelTier,
     ModelVersion,
+    get_model_name,
 )
 
 from ..experiment_tracker import (
@@ -51,8 +51,12 @@ class ModelManager:
         self.device = self._detect_optimal_device()
 
         # Dynamic model selection
+        # Initialize from configs.SUPPORTED_MODELS when present
+
         self.model_configs = self._initialize_model_configs()
-        self.current_tier = ModelTier.BALANCED
+        # ModelTier enum was removed from central config. Use None or
+        # environment-driven selection via `configs.model_config.get_model_name()`
+        self.current_tier = None
 
         self.model_versions: Dict[str, ModelVersion] = {}
         self.current_model: Optional[str] = None
@@ -123,8 +127,20 @@ class ModelManager:
         use_quantization: bool = True,
         quant_type: Optional[str] = "dynamic",
         use_cache: bool = True,
-    ) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> Tuple[Optional[AutoModelForCausalLM], Optional[AutoTokenizer]]:
         """Load model with advanced optimization and caching."""
+        # If model_name references a remote provider (format: provider:model_id)
+        # then we do not attempt to load a local HuggingFace model here. Return
+        # a tuple of (None, None) and let higher-level code (LLMClient) use the
+        # provider adapter for generation.
+        if ":" in model_name:
+            provider_prefix = model_name.split(":", 1)[0].lower()
+            if provider_prefix in ("ollama", "dashscope", "aliyun", "aliyun_bailian"):
+                logger.info(
+                    "Model '%s' is a provider-backed model; skipping local load",
+                    model_name,
+                )
+                return None, None
 
         cache_key = self._get_model_cache_key(model_name, use_quantization)
 
@@ -236,9 +252,7 @@ class ModelManager:
                             model_name,
                             ModelVersion(
                                 "unknown",
-                                ModelConfig(
-                                    "unknown", ModelTier.SPEED, 0.0, 0.0, 0.0, "unknown"
-                                ),
+                                ModelConfig("unknown", 0.0, 0.0, 0.0, "unknown"),
                                 time.time(),
                             ),
                         ).version,
@@ -307,12 +321,28 @@ class ModelManager:
 
     def load_tokenizer(self, model_name: str, use_cache: bool = True) -> AutoTokenizer:
         """Load tokenizer with caching."""
-        cache_key = f"tokenizer_{model_name}"
+        # If model_name references a provider (e.g. "ollama:qwen3-8b"),
+        # prefer an HF tokenizer specified by the env var `TOKENIZER_MODEL`
+        # or the HF base model for LoRA workflows.
+        tokenizer_model = None
+        if model_name is None:
+            tokenizer_model = os.getenv("TOKENIZER_MODEL")
+        else:
+            if ":" in model_name:
+                tokenizer_model = os.getenv("TOKENIZER_MODEL")
+            else:
+                tokenizer_model = model_name
+
+        if not tokenizer_model:
+            # Fallback to HF base (used for LoRA/finetuning)
+            tokenizer_model = get_model_name(prefer_hf=True)
+
+        cache_key = f"tokenizer_{tokenizer_model}"
         if use_cache and cache_key in self.model_cache:
             return self.model_cache[cache_key]["tokenizer"]
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_name, cache_dir=str(self.cache_dir / "tokenizers")
+            tokenizer_model, cache_dir=str(self.cache_dir / "tokenizers")
         )
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
@@ -325,11 +355,21 @@ class ModelManager:
         self, model_name: str, use_cache: bool = True
     ) -> SentenceTransformer:
         """Load embedding model with caching and device optimization."""
-        cache_key = f"embedding_{model_name}"
+        # Allow overriding embedding model via `EMBEDDING_MODEL` env var.
+        from typing import Optional
+
+        emb_model: Optional[str] = model_name
+        if not emb_model or ":" in str(model_name):
+            emb_model = os.getenv("EMBEDDING_MODEL")
+
+        if not emb_model:
+            emb_model = "sentence-transformers/all-MiniLM-L6-v2"
+
+        cache_key = f"embedding_{emb_model}"
         if use_cache and cache_key in self.model_cache:
             return self.model_cache[cache_key]["model"]
 
-        model = SentenceTransformer(model_name, device=self.device)
+        model = SentenceTransformer(emb_model, device=self.device)
         if use_cache:
             self.model_cache[cache_key] = {"model": model}
         return model
@@ -373,68 +413,18 @@ class ModelManager:
 
     def _initialize_model_configs(self) -> Dict[str, ModelConfig]:
         """Initialize model configurations with quality-speed tradeoffs."""
-        return {
-            "microsoft/DialoGPT-small": ModelConfig(
-                name="microsoft/DialoGPT-small",
-                tier=ModelTier.SPEED,
-                memory_gb=1.0,
-                latency_ms=50,
-                quality_score=0.6,
-                description="Small, fast conversational model",
-            ),
-            "google/flan-t5-small": ModelConfig(
-                name="google/flan-t5-small",
-                tier=ModelTier.SPEED,
-                memory_gb=1.2,
-                latency_ms=60,
-                quality_score=0.7,
-                description="Fast T5 model optimized for QA tasks",
-            ),
-            "microsoft/DialoGPT-medium": ModelConfig(
-                name="microsoft/DialoGPT-medium",
-                tier=ModelTier.BALANCED,
-                memory_gb=2.0,
-                latency_ms=80,
-                quality_score=0.8,
-                description="Balanced conversational model",
-            ),
-            "google/flan-t5-base": ModelConfig(
-                name="google/flan-t5-base",
-                tier=ModelTier.BALANCED,
-                memory_gb=2.5,
-                latency_ms=100,
-                quality_score=0.85,
-                description="Balanced T5 model with good QA performance",
-            ),
-            "microsoft/DialoGPT-large": ModelConfig(
-                name="microsoft/DialoGPT-large",
-                tier=ModelTier.QUALITY,
-                memory_gb=4.0,
-                latency_ms=120,
-                quality_score=0.9,
-                description="Large conversational model",
-            ),
-            "microsoft/phi-2": ModelConfig(
-                name="microsoft/phi-2",
-                tier=ModelTier.QUALITY,
-                memory_gb=5.0,
-                latency_ms=150,
-                quality_score=0.95,
-                description="High-performance general-purpose model",
-            ),
-        }
+        # Load supported models from central config if available, otherwise
+        # fall back to an empty registry.
+        try:
+            from configs.model_config import SUPPORTED_MODELS
 
-    def select_model_for_tier(self, tier: ModelTier) -> str:
-        """Select the best model for a given performance tier."""
-        tier_models = [
-            config for config in self.model_configs.values() if config.tier == tier
-        ]
-        if not tier_models:
-            # Fallback to any available model
-            return list(self.model_configs.keys())[0]
+            return {k: v for k, v in SUPPORTED_MODELS.items()}
+        except Exception:
+            return {}
 
-        # Select model with best quality for the tier
-        return max(tier_models, key=lambda x: x.quality_score).name
+    # NOTE: `select_model_for_tier` removed — selection is performed directly
+    # by `get_model_recommendation` below. This simplifies the codebase and
+    # removes the old ModelTier dependency.
 
     def get_optimal_model(
         self, max_memory_gb: Optional[float] = None, min_quality: Optional[float] = None
@@ -521,45 +511,36 @@ class ModelManager:
             model_loader=self.load_model,
         )
 
-    def get_model_recommendation(self, priority: str = "balanced") -> str:
-        """Get model recommendation based on priority (speed/quality/balanced)."""
-        if priority == "speed":
-            return self.select_model_for_tier(ModelTier.SPEED)
-        elif priority == "quality":
-            return self.select_model_for_tier(ModelTier.QUALITY)
-        else:  # balanced
-            return self.select_model_for_tier(ModelTier.BALANCED)
+    # get_model_recommendation removed — use configs.model_config.get_model_name
 
     def get_best_model_for_constraints(
         self,
         max_latency_ms: Optional[float] = None,
         max_memory_gb: Optional[float] = None,
     ) -> str:
-        """Get the best model that meets the given constraints."""
-        candidates = list(self.model_configs.values())
-
-        if max_latency_ms is not None:
-            candidates = [c for c in candidates if c.latency_ms <= max_latency_ms]
-
-        if max_memory_gb is not None:
-            candidates = [c for c in candidates if c.memory_gb <= max_memory_gb]
-
-        if not candidates:
-            # Return smallest model as fallback
-            return min(self.model_configs.values(), key=lambda x: x.memory_gb).name
-
-        # Return highest quality model that meets constraints
-        return max(candidates, key=lambda x: x.quality_score).name
+        # get_best_model_for_constraints removed — use get_optimal_model
+        # which prefers models under a memory budget and higher quality.
+        return self.get_optimal_model(max_memory_gb=max_memory_gb)
 
     def load_model_with_fallback(
         self,
         model_name: str,
         use_quantization: bool = True,
         quant_type: str = "dynamic",
-    ) -> Tuple[AutoModelForCausalLM, AutoTokenizer]:
+    ) -> Tuple[Optional[AutoModelForCausalLM], Optional[AutoTokenizer]]:
         """Load model with automatic fallback to smaller\
             models under memory pressure."""
         original_model = model_name
+
+        # If provider-backed, don't attempt fallback to other HF models
+        if ":" in model_name:
+            provider_prefix = model_name.split(":", 1)[0].lower()
+            if provider_prefix in ("ollama", "dashscope", "aliyun", "aliyun_bailian"):
+                logger.info(
+                    "Provider-backed model '%s' requested; skipping fallback logic",
+                    model_name,
+                )
+                return None, None
 
         # Check if we should downgrade
         if self.should_downgrade_model(model_name):
@@ -570,7 +551,8 @@ class ModelManager:
                         from {model_name} to {downgrade_model}"
                 )
                 model_name = downgrade_model
-                self.current_tier = self.model_configs[model_name].tier
+                # ModelConfig no longer exposes a 'tier' attribute; update current model instead
+                self.current_model = model_name
 
         try:
             return self.load_model(model_name, use_quantization, quant_type)
@@ -644,17 +626,17 @@ class ModelManager:
 
         # Save to disk
         config_path = self.config_dir / f"{name}.json"
+        # Serialize the ModelVersion to disk using available ModelConfig fields.
         with open(config_path, "w") as f:
             json.dump(
                 {
                     "name": version.name,
                     "config": {
-                        "name": version.config.name,  # Changed from model_name to name
-                        "tier": version.config.tier.value,
-                        "memory_gb": version.config.memory_gb,
-                        "latency_ms": version.config.latency_ms,
-                        "quality_score": version.config.quality_score,
-                        "description": version.config.description,
+                        "name": getattr(version.config, "name", version.config.name),
+                        "memory_gb": getattr(version.config, "memory_gb", None),
+                        "latency_ms": getattr(version.config, "latency_ms", None),
+                        "quality_score": getattr(version.config, "quality_score", None),
+                        "description": getattr(version.config, "description", ""),
                     },
                     "created_at": version.created_at,
                     "performance_metrics": version.performance_metrics,
@@ -697,6 +679,12 @@ class ModelManager:
         base_model, tokenizer = self.load_model(
             model_name, use_quantization=use_quantization
         )
+
+        # Ensure base_model and tokenizer are loaded (not provider-backed)
+        assert (
+            base_model is not None and tokenizer is not None
+        ), "LoRA operations require a local HF model and tokenizer; \
+            provider-backed models are not supported"
 
         # Delegate to LoRA manager
         return self.lora_manager.apply_lora_to_model(base_model, tokenizer, lora_config)
@@ -744,6 +732,12 @@ class ModelManager:
             model_name, use_quantization=use_quantization
         )
 
+        # Ensure base_model and tokenizer are loaded (not provider-backed)
+        assert (
+            base_model is not None and tokenizer is not None
+        ), "LoRA adapter loading requires a local HF base model and tokenizer; \
+            provider models are not supported"
+
         # Delegate to LoRA manager
         return self.lora_manager.load_lora_adapter(
             base_model, tokenizer, adapter_name, model_name
@@ -761,6 +755,11 @@ class ModelManager:
         model, tokenizer = self.load_model(
             model_name, use_quantization=use_quantization
         )
+
+        # Ensure model and tokenizer are present
+        assert (
+            model is not None and tokenizer is not None
+        ), "Preparing for LoRA training requires a local HF model and tokenizer"
 
         # Delegate to LoRA manager
         return self.lora_manager.prepare_model_for_lora_training(
@@ -784,26 +783,16 @@ def get_model_manager() -> ModelManager:
     return _model_manager
 
 
-# Suitable models for M1 Pro PEFT tuning (16GB memory optimized)
+# Recommended model for local LoRA development
+# We keep this mapping minimal because runtime generation uses provider-backed
+# models (Ollama / Dashscope). For LoRA fine-tuning iterations, prefer
+# `ollama:qwen3-8b` running on a local Ollama server; use Hugging Face
+# model artifacts when packaging adapters for distribution.
 SUITABLE_MODELS = {
-    "microsoft/DialoGPT-medium": {
-        "model": "microsoft/DialoGPT-medium",  # 345M parameters
-        "memory": "~2GB (CPU with quantization)",
-        "finetuning": "fast convergence, very suitable",
-    },
-    "microsoft/phi-2": {
-        "model": "microsoft/phi-2",  # 2.7B parameters
-        "memory": "~5GB (CPU with quantization)",
-        "finetuning": "excellent balance, strong reasoning ability",
-    },
-    "meta-llama/Llama-2-7b-hf": {
-        "model": "meta-llama/Llama-2-7b-hf",  # 7B parameters
-        "memory": "~8GB (CPU with quantization)",
-        "finetuning": "high performance, requires sufficient memory",
-    },
-    "microsoft/DialoGPT-large": {
-        "model": "microsoft/DialoGPT-large",  # 762M parameters
-        "memory": "~4GB (CPU with quantization)",
-        "finetuning": "excellent dialogue quality",
-    },
+    "ollama:qwen3-8b": {
+        "model": "qwen3-8b (Ollama)",
+        "memory": "~8GB (server-side / local Ollama)",
+        "finetuning": "Use Ollama for rapid iteration; export LoRA adapters via \
+            HF-compatible format",
+    }
 }

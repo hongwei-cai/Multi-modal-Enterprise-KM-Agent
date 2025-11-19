@@ -8,7 +8,7 @@ from src.rag.llm_client import get_llm_client
 @pytest.fixture(autouse=True)
 def set_test_model(monkeypatch):
     """Set a consistent model for integration tests."""
-    monkeypatch.setenv("LLM_MODEL_NAME", "google/flan-t5-small")
+    monkeypatch.setenv("LLM_MODEL_NAME", "ollama:qwen3-8b")
     monkeypatch.setenv("MODEL_PRIORITY", "balanced")
 
 

@@ -64,7 +64,8 @@ graph TB
 - **PEFT/LoRA** - Parameter-efficient fine-tuning
 
 ### Core Components
-- **Llama 3** - Foundation language model
+- **Qwen (Ollama / DashScope)** - Primary LLM providers. Use **Ollama** for local development (fast iteration, local inference) and **DashScope** for production hosted inference. Model names used in this repo: `ollama:qwen3-8b` (local dev) and `dashscope:qwen3-max` (production).
+- **Hugging Face Transformers** - Model hub and utilities; used primarily for fine-tuning and LoRA adapter creation.
 - **CLIP** - Multimodal understanding
 - **LangChain** - LLM application framework
 - **ChromaDB** - Vector database
@@ -226,7 +227,23 @@ response = agent.ask_multimodal_question(image_question, image_path)
 ### Environment Configuration
 Create a `.env` file in the project root:
 ```ini
-VLLM_MODEL_NAME=microsoft/DialoGPT-medium
+# Vector DB
+VECTOR_DB_URL=chromadb:8000
+
+# Local Ollama (development)
+# Set to your local Ollama server URL and preferred model
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=qwen3-8b
+
+# DashScope (production provider)
+DASHSCOPE_URL=https://api.dashscope.example
+DASHSCOPE_API_KEY=your_dashscope_api_key
+DASHSCOPE_MODEL=qwen3-max
+
+# Hugging Face (fine-tuning / LoRA adapters)
+HF_MODEL_FOR_FINETUNE=facebook/opt-1.3b
+
+# Optional: Chroma DB path (HTTP)
 CHROMA_DB_PATH=http://chromadb:8000
 ```
 

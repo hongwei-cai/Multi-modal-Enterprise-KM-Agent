@@ -174,44 +174,86 @@ class ExperimentManager:
         start_time = time.time()
 
         try:
-            # Load model
+            # Load model (may be provider-backed; loader returns (None, None))
             model, tokenizer = model_loader(model_name, use_quantization=True)
 
-            # Tokenize input
-            inputs = tokenizer(test_prompt, return_tensors="pt")
-            device = next(model.parameters()).device
-            inputs = {k: v.to(device) for k, v in inputs.items()}
+            if model is None or tokenizer is None:
+                # Provider-backed model: delegate generation to LLM client
+                logger.info(
+                    "Model loader returned None; assuming provider-backed model '%s'",
+                    model_name,
+                )
+                # Import lazily to avoid circular imports at module load time
+                from ..llm_client import LLMClient
 
-            # Generate response
-            import torch
+                llm = LLMClient(model_name=model_name)
+                gen_start = time.time()
+                response = llm.generate(
+                    prompt=test_prompt, max_length=max_tokens, do_sample=False
+                )
+                gen_end = time.time()
 
-            with torch.no_grad():
-                outputs = model.generate(
-                    **inputs,
-                    max_new_tokens=max_tokens,
-                    do_sample=False,  # Deterministic for benchmarking
-                    pad_token_id=tokenizer.pad_token_id,
+                latency_ms = (gen_end - gen_start) * 1000
+                end_memory = psutil.virtual_memory().used / (1024**2)  # MB
+                memory_usage_mb = end_memory - start_memory
+
+                # Estimate generated tokens
+                try:
+                    generated_tokens = max(
+                        0, len(response.split()) - len(test_prompt.split())
+                    )
+                except Exception:
+                    generated_tokens = 0
+
+                tokens_per_second = (
+                    generated_tokens / (gen_end - gen_start)
+                    if (gen_end - gen_start) > 0
+                    else 0
                 )
 
-            # Calculate metrics
-            end_time = time.time()
-            end_memory = psutil.virtual_memory().used / (1024**2)  # MB
+                result = BenchmarkResult(
+                    model_name=model_name,
+                    latency_ms=latency_ms,
+                    memory_usage_gb=memory_usage_mb / 1024,
+                    tokens_per_second=tokens_per_second,
+                )
 
-            latency_ms = (end_time - start_time) * 1000
-            memory_usage_mb = end_memory - start_memory
-            generated_tokens = len(outputs[0]) - len(inputs["input_ids"][0])
-            tokens_per_second = (
-                generated_tokens / (end_time - start_time)
-                if (end_time - start_time) > 0
-                else 0
-            )
+            else:
+                # Tokenize input
+                inputs = tokenizer(test_prompt, return_tensors="pt")
+                device = next(model.parameters()).device
+                inputs = {k: v.to(device) for k, v in inputs.items()}
 
-            result = BenchmarkResult(
-                model_name=model_name,
-                latency_ms=latency_ms,
-                memory_usage_gb=memory_usage_mb / 1024,  # Convert MB to GB
-                tokens_per_second=tokens_per_second,
-            )
+                # Generate response
+                import torch
+
+                with torch.no_grad():
+                    outputs = model.generate(
+                        **inputs,
+                        max_new_tokens=max_tokens,
+                        do_sample=False,  # Deterministic for benchmarking
+                        pad_token_id=tokenizer.pad_token_id,
+                    )
+
+                # Calculate metrics
+                end_time = time.time()
+                end_memory = psutil.virtual_memory().used / (1024**2)  # MB
+
+                latency_ms = (end_time - start_time) * 1000
+                memory_usage_mb = end_memory - start_memory
+                generated_tokens = len(outputs[0]) - len(inputs["input_ids"][0])
+                tokens_per_second = (
+                    generated_tokens / (end_time - start_time)
+                    if (end_time - start_time) > 0
+                    else 0
+                )
+
+                result = BenchmarkResult(
+                    model_name=model_name,
+                    latency_ms=latency_ms,
+                    memory_usage_gb=memory_usage_mb / 1024,  # Convert MB to GB
+                    tokens_per_second=tokens_per_second,
+                )
 
             # Store benchmark result
             self.benchmark_results[model_name] = result

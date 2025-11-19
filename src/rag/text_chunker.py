@@ -43,7 +43,9 @@ class TextChunker:
     @property
     def tokenizer(self):
         if self._tokenizer is None:
-            self._tokenizer = self.model_manager.load_tokenizer("bert-base-uncased")
+            # Let ModelManager pick the appropriate tokenizer based on
+            # `TOKENIZER_MODEL` env var or HF base when provider-backed runtime is used.
+            self._tokenizer = self.model_manager.load_tokenizer(None)
         return self._tokenizer
 
     @property

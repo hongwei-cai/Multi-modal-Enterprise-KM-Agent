@@ -1,11 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from src.rag.managers.model_manager import (
-    ABTestConfig,
-    ModelConfig,
-    ModelManager,
-    ModelTier,
-)
+from src.rag.managers.model_manager import ABTestConfig, ModelConfig, ModelManager
 
 
 def test_model_versioning():
@@ -19,9 +14,8 @@ def test_model_versioning():
     ):
         manager = ModelManager()
 
-        config = ModelConfig(
-            "test-model", ModelTier.BALANCED, 2.0, 100, 0.8, "Test model description"
-        )
+        # New ModelConfig signature: (name, memory_gb, latency_ms, quality_score, description)
+        config = ModelConfig("test-model", 2.0, 100, 0.8, "Test model description")
         manager.save_model_version("v1.0", config)
 
         assert "v1.0" in manager.list_model_versions()
@@ -38,11 +32,9 @@ def test_model_switching():
     ):
         manager = ModelManager()
 
-        # Mock models
-        config1 = ModelConfig("model1", ModelTier.SPEED, 1.0, 50, 0.6, "Speed model")
-        config2 = ModelConfig(
-            "model2", ModelTier.QUALITY, 4.0, 200, 0.9, "Quality model"
-        )
+        # Mock models using new ModelConfig signature
+        config1 = ModelConfig("model1", 1.0, 50, 0.6, "Speed model")
+        config2 = ModelConfig("model2", 4.0, 200, 0.9, "Quality model")
 
         manager.save_model_version("speed", config1)
         manager.save_model_version("quality", config2)

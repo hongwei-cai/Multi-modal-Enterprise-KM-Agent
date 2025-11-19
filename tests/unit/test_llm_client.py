@@ -17,7 +17,7 @@ def test_llm_client_init_local():
             mock_model,
             mock_tokenizer,
         )
-        mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
+        # Ensure we don't rely on legacy recommendation APIs in tests
         mock_get_manager.return_value = mock_manager
 
         client = LLMClient(model_name="google/flan-t5-small")
@@ -44,7 +44,6 @@ def test_generate_local(mock_get_manager):
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
     mock_manager.load_model_with_fallback.return_value = (mock_model, mock_tokenizer)
-    mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
     mock_get_manager.return_value = mock_manager
 
     mock_tokenizer.pad_token_id = 0
@@ -52,7 +51,8 @@ def test_generate_local(mock_get_manager):
     mock_model.generate.return_value = [1, 2, 3]
     mock_model.device = "cpu"
 
-    client = LLMClient()
+    # Force a non-provider local model to ensure local generation path
+    client = LLMClient(model_name="google/flan-t5-small")
     response = client.generate("Test prompt")
     assert response == "Generated response"
     mock_tokenizer.decode.assert_called_once()
@@ -69,7 +69,7 @@ def test_generate_cloud():
         }
         mock_post.return_value = mock_response
 
-        client = LLMClient()
+        client = LLMClient(model_name="microsoft/DialoGPT-small")
         response = client.generate("Test prompt")
         assert response == "API response"
         mock_post.assert_called_once()
@@ -82,7 +82,6 @@ def test_get_llm_client(mock_get_manager):
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
     mock_manager.load_model_with_fallback.return_value = (mock_model, mock_tokenizer)
-    mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
     mock_get_manager.return_value = mock_manager
 
     client = get_llm_client()
@@ -98,7 +97,6 @@ def test_generate_with_parameters(mock_get_manager, mock_config):
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
     mock_manager.load_model_with_fallback.return_value = (mock_model, mock_tokenizer)
-    mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
     mock_get_manager.return_value = mock_manager
 
     # Mock tokenizer to return inputs dict
@@ -111,7 +109,7 @@ def test_generate_with_parameters(mock_get_manager, mock_config):
     mock_model.generate.return_value = [1, 2, 3]
     mock_model.device = "cpu"
 
-    client = LLMClient()
+    client = LLMClient(model_name="google/flan-t5-small")
     response = client.generate("Test", temperature=0.5, top_p=0.8)
     assert response == "Generated response"
     mock_model.generate.assert_called_with(
@@ -131,10 +129,9 @@ def test_parameter_validation(mock_get_manager):
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
     mock_manager.load_model_with_fallback.return_value = (mock_model, mock_tokenizer)
-    mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
     mock_get_manager.return_value = mock_manager
 
-    client = LLMClient()
+    client = LLMClient(model_name="google/flan-t5-small")
     with pytest.raises(ValueError, match="Temperature must be between 0 and 2"):
         client.generate("Test", temperature=3.0)
     with pytest.raises(ValueError, match="Top-p must be between 0 and 1"):
@@ -148,7 +145,6 @@ def test_response_format(mock_get_manager):
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
     mock_manager.load_model_with_fallback.return_value = (mock_model, mock_tokenizer)
-    mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
     mock_get_manager.return_value = mock_manager
 
     mock_tokenizer.eos_token_id = 2
@@ -156,7 +152,7 @@ def test_response_format(mock_get_manager):
     mock_model.generate.return_value = [1, 2, 3]
     mock_model.device = "cpu"
 
-    client = LLMClient()
+    client = LLMClient(model_name="google/flan-t5-small")
     response = client.generate("Hello")
     assert isinstance(response, str)
     assert len(response) > 0
@@ -170,7 +166,6 @@ def test_response_quality_basic(mock_get_manager):
     mock_model = MagicMock()
     mock_tokenizer = MagicMock()
     mock_manager.load_model_with_fallback.return_value = (mock_model, mock_tokenizer)
-    mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
     mock_get_manager.return_value = mock_manager
 
     mock_tokenizer.eos_token_id = 2
@@ -178,7 +173,7 @@ def test_response_quality_basic(mock_get_manager):
     mock_model.generate.return_value = [1, 2, 3]
     mock_model.device = "cpu"
 
-    client = LLMClient()
+    client = LLMClient(model_name="google/flan-t5-small")
     response = client.generate("Hi", max_length=50)
     assert len(response.split()) > 3  # At least a few words
     assert not response.startswith("Error")  # No error messages
@@ -187,14 +182,13 @@ def test_response_quality_basic(mock_get_manager):
 def test_llm_client_dynamic_model_selection():
     """Test dynamic model selection based on priority."""
     with patch("src.rag.llm_client.get_model_manager") as mock_get_manager, patch.dict(
-        "os.environ", {"LLM_MODEL_NAME": "gpt2"}
+        "os.environ", {"LLM_MODEL_NAME": "ollama:qwen3-8b"}
     ):
         mock_manager = MagicMock()
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
 
         # Mock the model recommendation
-        mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
         mock_manager.load_model_with_fallback.return_value = (
             mock_model,
             mock_tokenizer,
@@ -203,15 +197,15 @@ def test_llm_client_dynamic_model_selection():
         mock_get_manager.return_value = mock_manager
 
         # Test with speed priority
-        LLMClient(priority="speed")
-        mock_manager.get_model_recommendation.assert_called_with("speed")
+        client = LLMClient(priority="speed")
+        assert client.priority == "speed"
 
         # Reset mock for next test
         mock_manager.reset_mock()
 
         # Test with quality priority
-        LLMClient(priority="quality")
-        mock_manager.get_model_recommendation.assert_called_with("quality")
+        client = LLMClient(priority="quality")
+        assert client.priority == "quality"
 
 
 def test_llm_client_model_switching():
@@ -221,7 +215,6 @@ def test_llm_client_model_switching():
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
 
-        mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
         mock_manager.load_model_with_fallback.return_value = (
             mock_model,
             mock_tokenizer,
@@ -247,10 +240,9 @@ def test_llm_client_benchmarking():
             mock_model,
             mock_tokenizer,
         )
-        mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
         mock_get_manager.return_value = mock_manager
 
-        client = LLMClient()
+        client = LLMClient(model_name="google/flan-t5-small")
 
         # Test benchmarking
         result = client.benchmark_current_model()
@@ -265,22 +257,19 @@ def test_llm_client_optimal_model_selection():
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
 
-        mock_manager.get_best_model_for_constraints.return_value = (
-            "microsoft/DialoGPT-small"
-        )
+        mock_manager.get_optimal_model.return_value = "microsoft/DialoGPT-small"
         mock_manager.load_model_with_fallback.return_value = (
             mock_model,
             mock_tokenizer,
         )
-        mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
         mock_get_manager.return_value = mock_manager
 
-        client = LLMClient()
+        client = LLMClient(model_name="google/flan-t5-small")
 
-        # Test optimal model selection
-        optimal = client.get_optimal_model_for_constraints(max_latency_ms=100)
+        # Test optimal model selection (now uses get_optimal_model)
+        optimal = client.get_optimal_model_for_constraints(max_memory_gb=4)
         assert optimal == "microsoft/DialoGPT-small"
-        mock_manager.get_best_model_for_constraints.assert_called_with(100, None)
+        mock_manager.get_optimal_model.assert_called_with(max_memory_gb=4)
 
 
 def test_llm_client_ab_testing():
@@ -297,7 +286,6 @@ def test_llm_client_ab_testing():
         mock_manager.get_ab_test_model.return_value = "model_a"
         mock_manager.switch_model.return_value = True
         mock_manager.current_model = "original_model"
-        mock_manager.get_model_recommendation.return_value = "microsoft/DialoGPT-medium"
         mock_get_manager.return_value = mock_manager
 
         # Mock generation
@@ -305,7 +293,7 @@ def test_llm_client_ab_testing():
         mock_model.generate.return_value = [1, 2, 3]
         mock_model.device = "cpu"
 
-        client = LLMClient()
+        client = LLMClient(model_name="google/flan-t5-small")
         client.model = mock_model
         client.tokenizer = mock_tokenizer
 
