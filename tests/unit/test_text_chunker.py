@@ -1,8 +1,19 @@
-""" Unit tests for TextChunker class in src.rag.text_chunker."""
+""" Unit tests for TextChunker class in src.rag.text_chunker.
+
+Set a small, reliable tokenizer for unit tests to avoid attempting to
+download large or private HF models referenced in the runtime config.
+"""
+
+import os
 
 import pytest
 
 from src.rag.text_chunker import TextChunker  # Import the class instead of functions
+
+# Use a small public tokenizer for unit tests to keep them fast and
+# avoid relying on project-specific model ids.
+
+os.environ.setdefault("TOKENIZER_MODEL", "distilgpt2")
 
 
 def test_chunk_text_by_tokens_basic():
