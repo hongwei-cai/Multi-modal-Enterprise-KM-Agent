@@ -56,6 +56,13 @@ class LLMClient:
             elif provider == "dashscope":
                 self.provider_client = DashscopeClient(model=model_id or "qwen3-max")
 
+        # If running in cloud mode, always prefer the cloud HTTP API path
+        # rather than local provider adapters. This prevents provider clients
+        # from taking precedence when `CLOUD_ENV` is set (integration tests
+        # mock the HTTP API and expect the cloud code path to be used).
+        if self.is_cloud and self.provider_client is not None:
+            self.provider_client = None
+
         # Dynamic model selection
         env_priority = os.getenv("MODEL_PRIORITY", "balanced")
         self.priority: str = priority or (env_priority if env_priority else "balanced")
